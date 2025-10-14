@@ -9,7 +9,7 @@ import {
   CreateSubscriptionRequest 
 } from '@/types/api';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://jdbackend-production.up.railway.app';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

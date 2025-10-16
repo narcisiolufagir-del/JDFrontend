@@ -211,20 +211,14 @@ export default api;
 // Helper to build full URL for files returned by the API.
 export function buildFileUrl(filePath: string | null | undefined) {
   if (!filePath) return undefined;
-  // If it's already an absolute URL, normalize localhost to API base
+  // If it's already an absolute URL, only rewrite localhost/127.0.0.1 to API base
   if (/^https?:\/\//i.test(filePath)) {
-    try {
-      const url = new URL(filePath);
-      const apiBase = new URL(API_BASE_URL);
-      if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
-        url.protocol = apiBase.protocol;
-        url.host = apiBase.host; // includes hostname:port if any
-        return url.toString();
-      }
-      return filePath;
-    } catch {
-      // fall through to building from base
-    }
+    const base = API_BASE_URL.replace(/\/$/, '');
+    const rewritten = filePath.replace(
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\\d+)?/i,
+      base
+    );
+    return rewritten;
   }
   const base = API_BASE_URL.replace(/\/$/, '');
   const normalized = filePath.replace(/\\/g, '/').replace(/^\//, '');

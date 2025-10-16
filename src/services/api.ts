@@ -214,10 +214,14 @@ export function buildFileUrl(filePath: string | null | undefined) {
   // If it's already an absolute URL, only rewrite localhost/127.0.0.1 to API base
   if (/^https?:\/\//i.test(filePath)) {
     const base = API_BASE_URL.replace(/\/$/, '');
-    const rewritten = filePath.replace(
-      /^https?:\/\/(localhost|127\.0\.0\.1)(:\\d+)?/i,
+    // Replace localhost origin (optionally with port) with API base
+    let rewritten = filePath.replace(
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i,
       base
     );
+    // Safety: if a port accidentally remains after base, strip it
+    const escapedBase = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    rewritten = rewritten.replace(new RegExp(`^${escapedBase}:(?:\\d+)`), base);
     return rewritten;
   }
   const base = API_BASE_URL.replace(/\/$/, '');

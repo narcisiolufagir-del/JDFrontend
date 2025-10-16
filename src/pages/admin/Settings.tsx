@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { 
-  Settings, 
+  Settings as SettingsIcon, 
   Save, 
   RefreshCw, 
   Database, 
@@ -498,7 +498,7 @@ const Settings: React.FC = () => {
             <div className="space-y-2">
               <Label>Estatísticas</Label>
               <Button variant="outline" size="sm" className="w-full">
-                <Settings className="h-4 w-4 mr-2" />
+            <SettingsIcon className="h-4 w-4 mr-2" />
                 Ver Estatísticas
               </Button>
             </div>

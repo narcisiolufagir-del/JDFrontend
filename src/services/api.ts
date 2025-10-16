@@ -211,18 +211,9 @@ export default api;
 // Helper to build full URL for files returned by the API.
 export function buildFileUrl(filePath: string | null | undefined) {
   if (!filePath) return undefined;
-  // If it's already an absolute URL, only rewrite localhost/127.0.0.1 to API base
+  // If it's already an absolute URL, return as-is
   if (/^https?:\/\//i.test(filePath)) {
-    const base = API_BASE_URL.replace(/\/$/, '');
-    // Replace localhost origin (optionally with port) with API base
-    let rewritten = filePath.replace(
-      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i,
-      base
-    );
-    // Safety: if a port accidentally remains after base, strip it
-    const escapedBase = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    rewritten = rewritten.replace(new RegExp(`^${escapedBase}:(?:\\d+)`), base);
-    return rewritten;
+    return filePath;
   }
   const base = API_BASE_URL.replace(/\/$/, '');
   const normalized = filePath.replace(/\\/g, '/').replace(/^\//, '');

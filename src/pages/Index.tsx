@@ -11,14 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { useSubscriptionRenewal } from "@/hooks/useSubscriptionRenewal";
 import type { User as IUser, Jornal } from "@/types/api";
 
-import newspaperTech from "@/assets/newspaper-tech.jpg";
-import newspaperBusiness from "@/assets/newspaper-business.jpg";
-import newspaperSports from "@/assets/newspaper-sports.jpg";
-import newspaperWorld from "@/assets/newspaper-world.jpg";
-import newspaperCulture from "@/assets/newspaper-culture.jpg";
-import newspaperScience from "@/assets/newspaper-science.jpg";
 
-// Listagem real vinda da API
 
 const Index = () => {
   const navigate = useNavigate();

@@ -9,7 +9,7 @@ import {
   CreateSubscriptionRequest 
 } from '@/types/api';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || 'https://jdbackend-production.up.railway.app';
+const API_BASE_URL = 'https://jdbackend-production.up.railway.app';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

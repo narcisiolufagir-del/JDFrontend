@@ -215,5 +215,5 @@ export function buildFileUrl(filePath: string | null | undefined) {
   if (/^https?:\/\//i.test(filePath)) return filePath;
   const base = API_BASE_URL.replace(/\/$/, '');
   const normalized = filePath.replace(/\\\\/g, '/').replace(/^\//, '');
-  return `${base}/files/${normalized}`;
+  return `https://jdbackend-production.up.railway.app/files/${normalized}`;
 }

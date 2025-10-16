@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Newspaper, Users, CreditCard, TrendingUp } from 'lucide-react';
-import { adminAPI } from '../../services/api';
+import { adminAPI, buildFileUrl } from '../../services/api';
 import { Jornal, User, Subscription } from '../../types/api';
 
 interface DashboardStats {
@@ -160,7 +160,7 @@ const Dashboard: React.FC = () => {
                   <div className="flex-shrink-0">
                     {jornal.capa ? (
                       <img
-                        src={jornal.capa}
+                        src={buildFileUrl(jornal.capa) || ''}
                         alt={jornal.titulo}
                         className="h-12 w-12 rounded-lg object-cover ring-2 ring-border group-hover:ring-primary transition-all"
                       />

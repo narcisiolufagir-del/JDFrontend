@@ -9,7 +9,7 @@ import {
   CreateSubscriptionRequest 
 } from '@/types/api';
 
-const API_BASE_URL = 'https://jdbackend-production.up.railway.app';
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || 'https://jdbackend-production.up.railway.app';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -207,3 +207,13 @@ export const adminAPI = {
 };
 
 export default api;
+
+// Helper to build full URL for files returned by the API.
+export function buildFileUrl(filePath: string | null | undefined) {
+  if (!filePath) return undefined;
+  // If it's already an absolute URL, return as-is
+  if (/^https?:\/\//i.test(filePath)) return filePath;
+  const base = API_BASE_URL.replace(/\/$/, '');
+  const normalized = filePath.replace(/\\\\/g, '/').replace(/^\//, '');
+  return `${base}/files/${normalized}`;
+}

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { authAPI, userAPI } from "@/services/api";
+import { authAPI, userAPI, buildFileUrl } from "@/services/api";
 import { toast } from "@/hooks/use-toast";
 import { useSubscriptionRenewal } from "@/hooks/useSubscriptionRenewal";
 import type { User as IUser, Jornal } from "@/types/api";
@@ -491,7 +491,7 @@ const Index = () => {
                   <div className="relative h-64 overflow-hidden">
                     {jornal.capa ? (
                       <img
-                        src={jornal.capa}
+                        src={buildFileUrl(jornal.capa) || ''}
                         alt={jornal.titulo}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />

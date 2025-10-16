@@ -111,36 +111,36 @@ export const adminAPI = {
 
 Criar pedido (usuário):
 ```bash
-curl -X POST http://localhost:8000/user/subscriptions/requests \
+curl -X POST https://jdbackend-production.up.railway.app/user/subscriptions/requests \
  -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
  -d '{ "subscription_type": "anual", "payment_reference": "TX-2025-0001" }'
 ```
 
 Listar pedidos do usuário:
 ```bash
-curl -H "Authorization: Bearer <TOKEN>" http://localhost:8000/user/subscriptions/requests/my
+curl -H "Authorization: Bearer <TOKEN>" https://jdbackend-production.up.railway.app/user/subscriptions/requests/my
 ```
 
 Admin listar pendentes:
 ```bash
-curl -H "Authorization: Bearer <ADMIN_TOKEN>" "http://localhost:8000/admin/subscriptions/requests?status_filter=pending"
+curl -H "Authorization: Bearer <ADMIN_TOKEN>" "https://jdbackend-production.up.railway.app/admin/subscriptions/requests?status_filter=pending"
 ```
 
 Aprovar:
 ```bash
-curl -X POST http://localhost:8000/admin/subscriptions/requests/1/approve \
+curl -X POST https://jdbackend-production.up.railway.app/admin/subscriptions/requests/1/approve \
  -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" \
  -d '{ "observacao_admin": "Pagamento confirmado." }'
 ```
 
 Rejeitar:
 ```bash
-curl -X POST http://localhost:8000/admin/subscriptions/requests/1/reject \
+curl -X POST https://jdbackend-production.up.railway.app/admin/subscriptions/requests/1/reject \
  -H "Authorization: Bearer <ADMIN_TOKEN>" -H "Content-Type: application/json" \
  -d '{ "observacao_admin": "Comprovante inválido." }'
 ```
 
 ## Dicas
-- Configure `VITE_API_URL` se preferir não fixar `http://localhost:8000`.
+- Configure `VITE_API_URL` se preferir não fixar `https://jdbackend-production.up.railway.app`.
 - Use toasts (sonner) para feedback de envio/erro.
 - Mostre estados de loading/empty nas páginas.

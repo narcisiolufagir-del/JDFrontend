@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, Upload, Download } from 'lucide-react';
-import { adminAPI } from '../../services/api';
+import { adminAPI, buildFileUrl } from '../../services/api';
 import { Jornal } from '../../types/api';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -235,7 +235,7 @@ const JornaisManagement: React.FC = () => {
             <div className="flex items-start justify-between mb-4 relative z-10">
               {jornal.capa ? (
                 <img
-                  src={jornal.capa}
+                  src={buildFileUrl(jornal.capa) || ''}
                   alt={jornal.titulo}
                   className="h-32 w-full object-cover rounded-xl ring-2 ring-border group-hover:ring-primary transition-all"
                 />

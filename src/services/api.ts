@@ -211,11 +211,17 @@ export default api;
 // Helper to build full URL for files returned by the API.
 export function buildFileUrl(filePath: string | null | undefined) {
   if (!filePath) return undefined;
-  // If it's already an absolute URL, return as-is
-  if (/^https?:\/\//i.test(filePath)) {
-    return filePath;
-  }
+  
+  // Always use the production base URL for file paths
   const base = API_BASE_URL.replace(/\/$/, '');
-  const normalized = filePath.replace(/\\/g, '/').replace(/^\//, '');
+  
+  // Remove any existing base URL and normalize path
+  const normalized = filePath
+    .replace(/^https?:\/\/(localhost|\d+\.\d+\.\d+\.\d+)(:\d+)?\//, '') // Remove localhost or IP
+    .replace(/^https?:\/\/[^/]+\//, '') // Remove any other domain
+    .replace(/^\/files\//, '') // Remove /files/ prefix if present
+    .replace(/\\/g, '/') // Convert backslashes to forward slashes
+    .replace(/^\//, ''); // Remove leading slash
+    
   return `${base}/files/${normalized}`;
 }

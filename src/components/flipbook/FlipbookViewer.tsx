@@ -5,6 +5,7 @@ import { TransformWrapper } from 'react-zoom-pan-pinch';
 import { Document, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+import { buildFileUrl } from '@/services/api';
 import './flipbook.css';
 
 // pdf.js worker for react-pdf - using local worker
@@ -48,7 +49,9 @@ export default function FlipbookViewer({ pdfUrl, className, onError }: FlipbookV
   useEffect(() => {
     const fetchPdf = async () => {
       try {
-        const response = await fetch(pdfUrl, {
+        // Use buildFileUrl to ensure we have the correct base URL
+        const fullPdfUrl = buildFileUrl(pdfUrl) || pdfUrl;
+        const response = await fetch(fullPdfUrl, {
           headers: {
             'Accept': 'application/pdf',
             'Cache-Control': 'no-cache',
@@ -58,6 +61,9 @@ export default function FlipbookViewer({ pdfUrl, className, onError }: FlipbookV
           const blob = await response.blob();
           const blobUrl = URL.createObjectURL(blob);
           setPdfBlob(blobUrl);
+        } else {
+          console.error('Failed to fetch PDF:', response.status, response.statusText);
+          onError?.();
         }
       } catch (error) {
         console.error('Error fetching PDF:', error);

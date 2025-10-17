@@ -208,16 +208,20 @@ export const adminAPI = {
 
 export default api;
 
-// Helper to build full URL for files returned by the API.
+// Helper to build full URL for files returned by the API
 export function buildFileUrl(filePath: string | null | undefined) {
   if (!filePath) return undefined;
   
-  // If it's already a full URL, return it as-is
-  if (filePath.startsWith('http')) {
-    return filePath;
-  }
+  // Always use the production URL
+  const base = 'https://jdbackend-production.up.railway.app';
   
-  // Otherwise, prepend the base URL and /files/
-  const base = API_BASE_URL.replace(/\/$/, '');
-  return `${base}/files/${filePath.replace(/^[\\/]/, '')}`;
+  // Remove any existing base URL (localhost or production) and extract just the file path
+  let cleanPath = filePath
+    .replace(/^https?:\/\/[^/]+\/files\//, '') // Remove http://domain/files/
+    .replace(/^https?:\/\/[^/]+\//, '')         // Remove http://domain/
+    .replace(/^\/files\//, '')                   // Remove /files/
+    .replace(/^[\\/]/, '');                      // Remove leading slashes
+  
+  // Return the full production URL
+  return `${base}/files/${cleanPath}`;
 }

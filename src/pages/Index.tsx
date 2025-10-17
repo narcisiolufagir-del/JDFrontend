@@ -382,7 +382,7 @@ const Index = () => {
               <img 
                 src="https://odestaque.co.mz/wp-content/uploads/2025/02/cropped-DESTAQUE-globo-SEM-FUNDO-180x180.png" 
                 alt="Jornal Destaque Logo" 
-                className="w-10 h-10 md:w-12 md:h-12 object-contain"
+                className="w-6 h-6 object-contain"
               />
               <h1 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Jornal Destaque

@@ -54,7 +54,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <img 
                 src="https://odestaque.co.mz/wp-content/uploads/2025/02/cropped-DESTAQUE-globo-SEM-FUNDO-180x180.png" 
                 alt="Jornal Destaque Logo" 
-                className="w-8 h-8 object-contain"
+                className="w-6 h-6 object-contain"
               />
               <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">Jornal Destaque</h1>
             </div>
@@ -118,7 +118,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <img 
                 src="https://odestaque.co.mz/wp-content/uploads/2025/02/cropped-DESTAQUE-globo-SEM-FUNDO-180x180.png" 
                 alt="Jornal Destaque Logo" 
-                className="w-8 h-8 object-contain"
+                className="w-6 h-6 object-contain"
               />
               <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent animate-shimmer">Jornal Destaque</h1>
             </div>

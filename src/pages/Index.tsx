@@ -417,6 +417,7 @@ const Index = () => {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => navigate('/profile')}
                     className="gap-2 border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-all"
                   >
                     <User className="w-4 h-4" />

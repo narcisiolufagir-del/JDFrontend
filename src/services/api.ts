@@ -111,6 +111,9 @@ export const authAPI = {
   
   getCurrentUser: (): Promise<User> =>
     api.get('/user/me').then(res => res.data),
+  
+  changePassword: (data: { senha_atual: string; senha_nova: string }): Promise<{ message: string }> =>
+    api.post('/user/change-password', data).then(res => res.data),
 };
 
 // Public/User endpoints

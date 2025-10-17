@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import FlipBook from "./pages/flipbook";
+import Profile from "./pages/Profile";
 import { AuthProvider } from "./contexts/AuthContext";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -33,6 +34,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/jornal/:id" element={<FlipBook />} />
             {/* Admin routes */}
             <Route path="/admin" element={<AdminRoute> <Dashboard /> </AdminRoute>} />

@@ -85,7 +85,11 @@ const Settings: React.FC = () => {
       }, 1000);
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
-      toast.error('Erro ao carregar configurações');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar configurações',
+        variant: 'destructive'
+      });
       setLoading(false);
     }
   };
@@ -99,11 +103,18 @@ const Settings: React.FC = () => {
       // Simular salvamento
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast.success('Configurações salvas com sucesso!');
+      toast({
+        title: 'Sucesso',
+        description: 'Configurações salvas com sucesso!'
+      });
       setHasChanges(false);
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
-      toast.error('Erro ao salvar configurações');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao salvar configurações',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
@@ -118,7 +129,10 @@ const Settings: React.FC = () => {
     if (confirm('Tem certeza que deseja restaurar as configurações padrão?')) {
       loadSettings();
       setHasChanges(false);
-      toast.info('Configurações restauradas para o padrão');
+      toast({
+        title: 'Informação',
+        description: 'Configurações restauradas para o padrão'
+      });
     }
   };
 

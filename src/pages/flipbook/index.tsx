@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { userAPI, adminAPI } from '@/services/api';
+import { userAPI, adminAPI, buildFileUrl } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, RotateCcw, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
 import type { Jornal } from '@/types/api';
@@ -46,7 +46,8 @@ export default function FlipBook() {
 
   const handleDownload = () => {
     if (jornal?.arquivopdf) {
-      window.open(jornal.arquivopdf, '_blank');
+      const pdfUrl = buildFileUrl(jornal.arquivopdf);
+      window.open(pdfUrl, '_blank');
     }
   };
 
@@ -155,7 +156,7 @@ export default function FlipBook() {
             {useFallback ? (
               <div className="w-full h-full">
                 <iframe
-                  src={jornal.arquivopdf}
+                  src={buildFileUrl(jornal.arquivopdf)}
                   className="w-full h-full border-0"
                   title={jornal.titulo}
                   allowFullScreen
@@ -166,7 +167,7 @@ export default function FlipBook() {
             ) : (
               <div className="w-full h-full">
                 <iframe
-                  src={`https://docs.google.com/gview?url=${encodeURIComponent(jornal.arquivopdf)}&embedded=true`}
+                  src={`https://docs.google.com/gview?url=${encodeURIComponent(buildFileUrl(jornal.arquivopdf) || '')}&embedded=true`}
                   className="w-full h-full border-0"
                   title={jornal.titulo}
                   allowFullScreen

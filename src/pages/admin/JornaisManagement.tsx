@@ -194,7 +194,8 @@ const JornaisManagement: React.FC = () => {
   };
 
   const handleDownload = (jornal: Jornal) => {
-    window.open(jornal.arquivopdf, '_blank');
+    const pdfUrl = buildFileUrl(jornal.arquivopdf);
+    window.open(pdfUrl, '_blank');
   };
 
   const formatDate = (dateString: string) => {

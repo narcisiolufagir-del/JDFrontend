@@ -50,7 +50,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-card/95 backdrop-blur-xl border-r border-border shadow-2xl animate-slide-in-right">
           <div className="flex h-16 items-center justify-between px-4">
-            <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">Jornal Destaque</h1>
+            <div className="flex items-center gap-2">
+              <img 
+                src="https://odestaque.co.mz/wp-content/uploads/2025/02/cropped-DESTAQUE-globo-SEM-FUNDO-180x180.png" 
+                alt="Jornal Destaque Logo" 
+                className="w-8 h-8 object-contain"
+              />
+              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">Jornal Destaque</h1>
+            </div>
             <button
               onClick={() => setSidebarOpen(false)}
               className="text-gray-400 hover:text-gray-600"
@@ -107,7 +114,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col z-40">
         <div className="flex flex-grow flex-col overflow-y-auto bg-card/95 backdrop-blur-xl border-r border-border shadow-xl">
           <div className="flex h-16 items-center px-4 border-b border-border">
-            <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent animate-shimmer">Jornal Destaque</h1>
+            <div className="flex items-center gap-2">
+              <img 
+                src="https://odestaque.co.mz/wp-content/uploads/2025/02/cropped-DESTAQUE-globo-SEM-FUNDO-180x180.png" 
+                alt="Jornal Destaque Logo" 
+                className="w-8 h-8 object-contain"
+              />
+              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent animate-shimmer">Jornal Destaque</h1>
+            </div>
           </div>
           <nav className="flex-1 px-4 py-4 space-y-1">
             {navigation.map((item) => {

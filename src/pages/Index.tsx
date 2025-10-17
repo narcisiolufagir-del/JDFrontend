@@ -378,11 +378,12 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Logo */}
-            <div className="flex items-center gap-2 animate-fade-in">
-              <div className="relative">
-                <Sparkles className="w-8 h-8 text-primary animate-glow" />
-                <div className="absolute inset-0 blur-xl bg-primary/50 animate-pulse" />
-              </div>
+            <div className="flex items-center gap-3 animate-fade-in">
+              <img 
+                src="https://odestaque.co.mz/wp-content/uploads/2025/02/cropped-DESTAQUE-globo-SEM-FUNDO-180x180.png" 
+                alt="Jornal Destaque Logo" 
+                className="w-10 h-10 md:w-12 md:h-12 object-contain"
+              />
               <h1 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Jornal Destaque
               </h1>

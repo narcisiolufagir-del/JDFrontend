@@ -212,16 +212,12 @@ export default api;
 export function buildFileUrl(filePath: string | null | undefined) {
   if (!filePath) return undefined;
   
-  // Always use the production base URL for file paths
-  const base = API_BASE_URL.replace(/\/$/, '');
+  // If it's already a full URL, return it as-is
+  if (filePath.startsWith('http')) {
+    return filePath;
+  }
   
-  // Remove any existing base URL and normalize path
-  const normalized = filePath
-    .replace(/^https?:\/\/(localhost|\d+\.\d+\.\d+\.\d+)(:\d+)?\//, '') // Remove localhost or IP
-    .replace(/^https?:\/\/[^/]+\//, '') // Remove any other domain
-    .replace(/^\/files\//, '') // Remove /files/ prefix if present
-    .replace(/\\/g, '/') // Convert backslashes to forward slashes
-    .replace(/^\//, ''); // Remove leading slash
-    
-  return `${base}/files/${normalized}`;
+  // Otherwise, prepend the base URL and /files/
+  const base = API_BASE_URL.replace(/\/$/, '');
+  return `${base}/files/${filePath.replace(/^[\\/]/, '')}`;
 }

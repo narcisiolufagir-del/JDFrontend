@@ -478,8 +478,9 @@ const Index = () => {
             {jornais.map((jornal, index) => (
               <div
                 key={jornal.id}
-                className="group relative animate-fade-in-up"
+                className="group relative animate-fade-in-up cursor-pointer"
                 style={{ animationDelay: `${0.1 * index}s` }}
+                onClick={() => onClickJornal(jornal)}
               >
                 <div className="relative overflow-hidden rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50">
                   {/* Cover Image */}
@@ -510,13 +511,6 @@ const Index = () => {
                     <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                       {jornal.titulo}
                     </h3>
-
-                    <Button
-                      className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-                      onClick={() => onClickJornal(jornal)}
-                    >
-                      Ler agora
-                    </Button>
                   </div>
                 </div>
               </div>

@@ -511,6 +511,16 @@ const Index = () => {
                     <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                       {jornal.titulo}
                     </h3>
+
+                    <Button
+                      className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onClickJornal(jornal);
+                      }}
+                    >
+                      Ler agora
+                    </Button>
                   </div>
                 </div>
               </div>

@@ -12,7 +12,7 @@ import {
 const API_BASE_URL = 'https://jdbackend-zgyf-bb7bc103.app.indiecloud.dev';
 
 const api = axios.create({
-  baseURL: "https://jdbackend-production.up.railway.app",
+  baseURL: "https://jdbackend-zgyf-bb7bc103.app.indiecloud.dev",
   headers: {
     'Content-Type': 'application/json',
   },

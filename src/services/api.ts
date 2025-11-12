@@ -9,10 +9,10 @@ import {
   CreateSubscriptionRequest 
 } from '@/types/api';
 
-const API_BASE_URL = 'https://jdbackend-zgyf-bb7bc103.app.indiecloud.dev';
+const API_BASE_URL = 'https://jdbackendapi.up.railway.app';
 
 const api = axios.create({
-  baseURL: "https://jdbackend-zgyf-bb7bc103.app.indiecloud.dev",
+  baseURL: "https://jdbackendapi.up.railway.app",
   headers: {
     'Content-Type': 'application/json',
   },

@@ -216,7 +216,7 @@ export function buildFileUrl(filePath: string | null | undefined) {
   if (!filePath) return undefined;
   
   // Always use the production URL
-  const base = 'https://jdbackend-zgyf-bb7bc103.app.indiecloud.dev';
+  const base = 'https://jdbackendapi.up.railway.app';
   
   // Remove any existing base URL (localhost or production) and extract just the file path
   let cleanPath = filePath

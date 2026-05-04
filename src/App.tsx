@@ -37,6 +37,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/policy" element={<PrivacyPolicy />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
             <Route path="/jornal/:id" element={<FlipBook />} />
             {/* Admin routes */}

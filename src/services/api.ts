@@ -9,10 +9,11 @@ import {
   CreateSubscriptionRequest 
 } from '@/types/api';
 
-const API_BASE_URL = 'https://jdbackendapi.up.railway.app';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ?? 'https://jornaldestaque.bluesparkmz.com';
 
 const api = axios.create({
-  baseURL: "https://jdbackendapi.up.railway.app",
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -215,8 +216,7 @@ export default api;
 export function buildFileUrl(filePath: string | null | undefined) {
   if (!filePath) return undefined;
   
-  // Always use the production URL
-  const base = 'https://jdbackendapi.up.railway.app';
+  const base = API_BASE_URL;
   
   // Remove any existing base URL (localhost or production) and extract just the file path
   let cleanPath = filePath

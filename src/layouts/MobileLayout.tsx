@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/BottomNav";
 
 export function MobileLayout() {
   return (
-    <div className="min-h-screen bg-white pb-16">
+    <div className="min-h-screen bg-white text-gray-900 pb-[62px]">
       <Outlet />
       <BottomNav />
     </div>

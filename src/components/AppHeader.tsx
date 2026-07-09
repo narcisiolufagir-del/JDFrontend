@@ -21,6 +21,8 @@ import {
 import type { User as IUser } from "@/types/api";
 import { formatSubscriptionType } from "@/hooks/useUserAccount";
 
+const BRAND = "#2B58C5";
+
 type AppHeaderProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -51,12 +53,16 @@ export function AppHeader({
   const navigate = useNavigate();
 
   const planBadge = hasActivePlan ? (
-    <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/15 border-emerald-500/20">
+    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
       <Crown className="w-3 h-3 mr-1" />
       Plano activo{activePlanLabel ? ` · ${activePlanLabel}` : ""}
     </Badge>
   ) : currentUser && currentUser.tipo_usuario !== "admin" ? (
-    <Badge variant="secondary" className="cursor-pointer" onClick={onSubscribe}>
+    <Badge
+      variant="secondary"
+      className="cursor-pointer bg-gray-100 text-gray-600"
+      onClick={onSubscribe}
+    >
       Sem plano
     </Badge>
   ) : null;
@@ -65,7 +71,7 @@ export function AppHeader({
     <>
       <Button
         variant="ghost"
-        className="w-full justify-start"
+        className="w-full justify-start text-gray-700"
         onClick={() => navigate("/profile")}
       >
         <User className="w-4 h-4 mr-2" />
@@ -74,7 +80,7 @@ export function AppHeader({
       {currentUser.tipo_usuario !== "admin" && (
         <Button
           variant="ghost"
-          className="w-full justify-start"
+          className="w-full justify-start text-gray-700"
           onClick={onSubscribe}
         >
           <CreditCard className="w-4 h-4 mr-2" />
@@ -84,7 +90,7 @@ export function AppHeader({
       {currentUser.tipo_usuario === "admin" && (
         <Button
           variant="ghost"
-          className="w-full justify-start"
+          className="w-full justify-start text-gray-700"
           onClick={() => navigate("/admin")}
         >
           <Shield className="w-4 h-4 mr-2" />
@@ -93,7 +99,7 @@ export function AppHeader({
       )}
       <Button
         variant="ghost"
-        className="w-full justify-start text-destructive hover:text-destructive"
+        className="w-full justify-start text-red-600 hover:text-red-600"
         onClick={onLogout}
         disabled={logoutLoading}
       >
@@ -103,11 +109,11 @@ export function AppHeader({
     </>
   ) : (
     <>
-      <Button variant="ghost" className="w-full justify-start" onClick={onLogin}>
+      <Button variant="ghost" className="w-full justify-start text-gray-700" onClick={onLogin}>
         <LogIn className="w-4 h-4 mr-2" />
         Entrar
       </Button>
-      <Button className="w-full justify-start" onClick={onSignup}>
+      <Button className="w-full justify-start text-white" style={{ backgroundColor: BRAND }} onClick={onSignup}>
         <User className="w-4 h-4 mr-2" />
         Criar conta
       </Button>
@@ -115,8 +121,8 @@ export function AppHeader({
   );
 
   return (
-    <header className="relative z-10 border-b border-border/50 backdrop-blur-xl bg-card/30">
-      <div className="container mx-auto px-4 py-3 space-y-3">
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
+      <div className="px-4 py-3 space-y-3">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -128,9 +134,12 @@ export function AppHeader({
               alt="Jornal Destaque"
               className="w-8 h-8 object-contain shrink-0"
             />
-            <span className="text-lg sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent truncate">
-              Jornal Destaque
-            </span>
+            <div className="text-left">
+              <span className="text-lg font-extrabold leading-none" style={{ color: BRAND }}>
+                O DESTAQUE
+              </span>
+              <p className="text-[11px] text-gray-400 mt-0.5">Jornais Digitais</p>
+            </div>
           </button>
 
           <div className="ml-auto hidden md:flex items-center gap-2">
@@ -138,12 +147,12 @@ export function AppHeader({
             {currentUser ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2 max-w-[180px]">
+                  <Button variant="outline" size="sm" className="gap-2 max-w-[180px] border-gray-200">
                     <User className="w-4 h-4 shrink-0" />
                     <span className="truncate">{currentUser.nome || currentUser.email}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuContent align="end" className="w-52 bg-white">
                   <DropdownMenuLabel className="truncate">
                     {currentUser.nome || currentUser.email}
                   </DropdownMenuLabel>
@@ -173,10 +182,10 @@ export function AppHeader({
               </DropdownMenu>
             ) : (
               <>
-                <Button variant="outline" size="sm" onClick={onLogin}>
+                <Button variant="outline" size="sm" className="border-gray-200" onClick={onLogin}>
                   Entrar
                 </Button>
-                <Button size="sm" onClick={onSignup}>
+                <Button size="sm" style={{ backgroundColor: BRAND }} onClick={onSignup}>
                   Cadastrar
                 </Button>
               </>
@@ -185,21 +194,21 @@ export function AppHeader({
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="md:hidden shrink-0">
+              <Button variant="ghost" size="icon" className="md:hidden shrink-0 text-gray-800">
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px]">
+            <SheetContent side="right" className="w-[280px] bg-white">
               <SheetHeader>
-                <SheetTitle>Menu</SheetTitle>
+                <SheetTitle className="text-gray-900">Menu</SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-2">
                 {currentUser && (
-                  <div className="rounded-lg border border-border/60 bg-muted/40 p-3 mb-4">
-                    <p className="text-sm font-medium truncate">
+                  <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 mb-4">
+                    <p className="text-sm font-medium truncate text-gray-900">
                       {currentUser.nome || currentUser.email}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">{currentUser.email}</p>
+                    <p className="text-xs text-gray-400 truncate">{currentUser.email}</p>
                     <div className="mt-2">{planBadge}</div>
                   </div>
                 )}
@@ -210,13 +219,13 @@ export function AppHeader({
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
             type="text"
             placeholder="Buscar jornais..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 bg-card/50 border-border/50 backdrop-blur-sm"
+            className="pl-11 h-[46px] rounded-full border-0 bg-[#F0F2F6] text-gray-800 placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#2B58C5]/25"
           />
         </div>
 
@@ -225,10 +234,10 @@ export function AppHeader({
             {planBadge}
             {!currentUser && (
               <div className="flex gap-2 ml-auto">
-                <Button variant="outline" size="sm" onClick={onLogin}>
+                <Button variant="outline" size="sm" className="border-gray-200" onClick={onLogin}>
                   Entrar
                 </Button>
-                <Button size="sm" onClick={onSignup}>
+                <Button size="sm" style={{ backgroundColor: BRAND }} onClick={onSignup}>
                   Cadastrar
                 </Button>
               </div>

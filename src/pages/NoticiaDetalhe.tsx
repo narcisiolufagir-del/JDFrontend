@@ -5,6 +5,8 @@ import { newsAPI, formatNewsDate, getCategoryColor } from "@/services/news";
 import type { NewsArticle } from "@/types/news";
 import { cn } from "@/lib/utils";
 
+const BRAND = "#2B58C5";
+
 const NoticiaDetalhe = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ const NoticiaDetalhe = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#1a56db]" />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND }} />
       </div>
     );
   }
@@ -33,7 +35,7 @@ const NoticiaDetalhe = () => {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
         <p className="text-gray-500 mb-4">Notícia não encontrada.</p>
-        <button onClick={() => navigate(-1)} className="text-[#1a56db] font-medium">
+        <button onClick={() => navigate(-1)} className="font-medium" style={{ color: BRAND }}>
           Voltar
         </button>
       </div>
@@ -46,7 +48,7 @@ const NoticiaDetalhe = () => {
         <button onClick={() => navigate(-1)} className="p-1 -ml-1">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
-        <span className="font-bold text-[#1a56db] text-sm">O DESTAQUE</span>
+        <span className="font-bold text-sm" style={{ color: BRAND }}>O DESTAQUE</span>
       </header>
 
       {article.image_url && (
@@ -81,7 +83,7 @@ const NoticiaDetalhe = () => {
 
         <div
           className="prose prose-sm max-w-none text-gray-700 leading-relaxed
-            [&_p]:mb-4 [&_strong]:font-semibold [&_a]:text-[#1a56db]"
+            [&_p]:mb-4 [&_strong]:font-semibold"
           dangerouslySetInnerHTML={{ __html: article.content ?? "" }}
         />
 
@@ -89,7 +91,8 @@ const NoticiaDetalhe = () => {
           href={article.link}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 mt-6 text-sm text-[#1a56db] font-medium"
+          className="inline-flex items-center gap-1.5 mt-6 text-sm font-medium"
+          style={{ color: BRAND }}
         >
           Ver no site <ExternalLink className="w-3.5 h-3.5" />
         </a>

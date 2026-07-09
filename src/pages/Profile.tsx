@@ -122,33 +122,29 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-bg">
-      <header className="relative z-10 border-b border-border/50 backdrop-blur-xl bg-card/30">
-        <div className="container mx-auto px-4 py-4">
+    <div className="min-h-screen bg-white">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <Button
-                onClick={() => navigate('/')}
-                variant="outline"
-                size="sm"
-                className="bg-background/50 shrink-0"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent truncate">
-                Meu Perfil
-              </h1>
+              <button type="button" onClick={() => navigate(-1)} className="p-1 -ml-1">
+                <ArrowLeft className="w-5 h-5 text-gray-700" />
+              </button>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">Minha Conta</h1>
+                <p className="text-xs text-gray-400">Gerir perfil e assinatura</p>
+              </div>
             </div>
             <Button variant="ghost" size="sm" onClick={() => void refresh()} disabled={accountLoading}>
-              <RefreshCw className={`w-4 h-4 ${accountLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-gray-500 ${accountLoading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto space-y-6">
-          <Card className="border-primary/20">
+      <div className="px-4 py-5">
+        <div className="max-w-3xl mx-auto space-y-4">
+          <Card className="border-gray-100 shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <CardTitle className="flex items-center gap-2">

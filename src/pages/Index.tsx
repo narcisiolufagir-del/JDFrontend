@@ -416,15 +416,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-bg relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-[100px] animate-float" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-[120px] animate-float" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-secondary/20 rounded-full blur-[100px] animate-float" style={{ animationDelay: "2s" }} />
-      </div>
-
-      {/* Header */}
+    <div className="min-h-screen bg-white">
       <AppHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -446,7 +438,7 @@ const Index = () => {
       />
 
       {/* Main Content */}
-      <main className="relative z-10 container mx-auto px-4 py-8">
+      <main className="px-4 py-5">
         {currentUser && currentUser.tipo_usuario !== "admin" && (
           <div className="mb-8">
             {hasActivePlan && activeSubscription ? (
@@ -460,7 +452,7 @@ const Index = () => {
                       <p className="font-semibold text-foreground">
                         Plano activo · {formatSubscriptionType(activeSubscription.subscription_type)}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-gray-400">
                         Válido até {new Date(activeSubscription.end_date).toLocaleDateString("pt-PT")}
                       </p>
                     </div>
@@ -475,7 +467,7 @@ const Index = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <p className="font-semibold text-foreground">Ainda sem plano activo</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-400">
                       Subscreva para ler todas as edições do Jornal Destaque.
                     </p>
                   </div>
@@ -489,12 +481,12 @@ const Index = () => {
         )}
 
         {/* Hero Section */}
-        <div className="text-center mb-12 animate-fade-in-up">
-          <h2 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-accent bg-clip-text text-transparent">
-            Suas notícias, seu mundo
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-1">
+            Jornais Digitais
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Descubra as últimas edições dos principais jornais com tecnologia de ponta
+          <p className="text-sm text-gray-400">
+            Leia as últimas edições do Jornal O Destaque
           </p>
         </div>
 
@@ -502,17 +494,15 @@ const Index = () => {
 
         {/* Newspapers Grid (reais) */}
         {jornais.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jornais.map((jornal, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {jornais.map((jornal) => (
               <div
                 key={jornal.id}
-                className="group relative animate-fade-in-up cursor-pointer"
-                style={{ animationDelay: `${0.1 * index}s` }}
+                className="group cursor-pointer"
                 onClick={() => onClickJornal(jornal)}
               >
-                <div className="relative overflow-hidden rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50">
-                  {/* Cover Image */}
-                  <div className="relative h-64 overflow-hidden">
+                <div className="relative overflow-hidden rounded-[20px] bg-white border border-gray-100 shadow-sm transition-all active:scale-[0.98]">
+                  <div className="relative h-52 overflow-hidden">
                     {jornal.capa ? (
                       <img
                         src={buildFileUrl(jornal.capa) || ''}
@@ -524,22 +514,22 @@ const Index = () => {
                         <span className="text-4xl">📰</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-60" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                   </div>
 
-                  {/* Content */}
-                  <div className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(jornal.data_publicacao).toLocaleDateString()}</span>
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{new Date(jornal.data_publicacao).toLocaleDateString("pt-PT")}</span>
                     </div>
 
-                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                    <h3 className="text-base font-bold text-gray-900 line-clamp-2">
                       {jornal.titulo}
                     </h3>
 
                     <Button
-                      className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                      className="w-full text-white hover:opacity-90"
+                      style={{ backgroundColor: "#2B58C5" }}
                       onClick={(e) => {
                         e.stopPropagation();
                         onClickJornal(jornal);
@@ -553,13 +543,13 @@ const Index = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 animate-fade-in">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-card/50 backdrop-blur-sm border border-border/50 mb-4">
-              <Search className="w-10 h-10 text-muted-foreground" />
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+              <Search className="w-8 h-8 text-gray-300" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">Nenhum jornal encontrado</h3>
-            <p className="text-muted-foreground">
-              Tente ajustar sua busca ou filtros
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Nenhum jornal encontrado</h3>
+            <p className="text-sm text-gray-400">
+              Tente ajustar sua busca
             </p>
           </div>
         )}
@@ -573,12 +563,12 @@ const Index = () => {
           if (!open) resetPaymentState();
         }}
       >
-        <DialogContent className="max-w-5xl bg-background/95 backdrop-blur-xl border-primary/30 shadow-2xl shadow-primary/10">
+        <DialogContent className="max-w-5xl bg-white border-gray-100">
           <DialogHeader>
-            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer">
+            <DialogTitle className="text-2xl font-bold text-gray-900">
               Escolha seu Plano
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription className="text-gray-400">
               Selecione o plano ideal para você e tenha acesso ilimitado aos nossos jornais
             </DialogDescription>
           </DialogHeader>
@@ -660,14 +650,14 @@ const Index = () => {
                   <div className="text-center py-8 space-y-4">
                     <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
                     <p className="text-foreground font-medium">Aguardando confirmação M-Pesa...</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-400">
                       Confirme o pagamento no telemóvel <strong>{msisdn}</strong>
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-center">
-                      <p className="text-sm text-muted-foreground">Valor a pagar</p>
+                      <p className="text-sm text-gray-400">Valor a pagar</p>
                       <p className="text-2xl font-bold text-foreground">
                         {plans.find(p => p.id === selectedPlan)?.price}
                       </p>
@@ -732,8 +722,8 @@ const Index = () => {
 
       {/* Auth Modal Overlay */}
       {showAuthModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="relative w-full max-w-md bg-card/90 backdrop-blur-xl rounded-2xl border border-border/50 shadow-2xl shadow-primary/20 animate-scale-in">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-100 shadow-xl">
             {/* Close Button */}
             <button
               onClick={() => setShowAuthModal(null)}
@@ -744,17 +734,17 @@ const Index = () => {
 
             <div className="p-8">
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-primary mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ backgroundColor: "#2B58C5" }}>
                   {showAuthModal === "login" ? (
                     <LogIn className="w-8 h-8 text-white" />
                   ) : (
                     <User className="w-8 h-8 text-white" />
                   )}
                 </div>
-                <h2 className="text-2xl font-bold mb-2">
+                <h2 className="text-2xl font-bold mb-2 text-gray-900">
                   {showAuthModal === "login" ? "Entrar" : "Criar Conta"}
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-400">
                   {showAuthModal === "login"
                     ? "Entre para acessar suas compras"
                     : "Cadastre-se para começar a comprar"}
@@ -767,7 +757,7 @@ const Index = () => {
                   <Input
                     type="email"
                     placeholder="seu@email.com"
-                    className="bg-background/50 border-border/50"
+                    className="bg-[#F0F2F6] border-0 text-gray-800"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -777,7 +767,7 @@ const Index = () => {
                   <Input
                     type="password"
                     placeholder="••••••••"
-                    className="bg-background/50 border-border/50"
+                    className="bg-[#F0F2F6] border-0 text-gray-800"
                     value={senha}
                     onChange={(e) => setSenha(e.target.value)}
                   />
@@ -789,7 +779,7 @@ const Index = () => {
                       <Input
                         type="text"
                         placeholder="Seu nome"
-                        className="bg-background/50 border-border/50"
+                        className="bg-[#F0F2F6] border-0 text-gray-800"
                         value={nome}
                         onChange={(e) => setNome(e.target.value)}
                       />
@@ -799,7 +789,7 @@ const Index = () => {
                       <Input
                         type="tel"
                         placeholder="(00) 00000-0000"
-                        className="bg-background/50 border-border/50"
+                        className="bg-[#F0F2F6] border-0 text-gray-800"
                         value={telefone}
                         onChange={(e) => setTelefone(e.target.value)}
                       />
@@ -809,7 +799,7 @@ const Index = () => {
                       <Input
                         type="password"
                         placeholder="••••••••"
-                        className="bg-background/50 border-border/50"
+                        className="bg-[#F0F2F6] border-0 text-gray-800"
                         value={confirmSenha}
                         onChange={(e) => setConfirmSenha(e.target.value)}
                       />
@@ -820,7 +810,8 @@ const Index = () => {
                   <p className="text-sm text-red-500">{error}</p>
                 )}
                 <Button
-                  className="w-full bg-gradient-primary hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                  className="w-full text-white hover:opacity-90"
+                  style={{ backgroundColor: "#2B58C5" }}
                   onClick={showAuthModal === "login" ? handleLogin : handleSignup}
                   disabled={loading}
                 >

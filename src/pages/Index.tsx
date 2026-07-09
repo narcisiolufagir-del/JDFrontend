@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Sparkles, User, LogIn, Calendar, Filter, X, Check, Loader2, Smartphone, Crown } from "lucide-react";
+import { Sparkles, User, LogIn, Calendar, Filter, X, Check, Loader2, Smartphone, Crown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

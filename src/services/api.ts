@@ -10,6 +10,7 @@ import {
   PaymentStartRequest,
   PaymentStatusResponse,
   JornalPurchase,
+  SubscriptionPlan,
 } from '@/types/api';
 
 const API_BASE_URL =
@@ -151,6 +152,9 @@ export const userAPI = {
 
   getMyPayments: (): Promise<{ payments: PaymentStatusResponse[]; count: number }> =>
     api.get('/user/payments/my').then(res => res.data),
+
+  getSubscriptionPlans: (): Promise<{ plans: SubscriptionPlan[] }> =>
+    api.get('/user/payments/plans').then(res => res.data),
 
   getMyPurchases: (): Promise<JornalPurchase[]> =>
     api.get('/user/me/compras').then(res => res.data),

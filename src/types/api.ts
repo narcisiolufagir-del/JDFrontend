@@ -63,12 +63,27 @@ export interface CreateSubscriptionRequest {
   payment_method?: 'digital' | 'fisico';
 }
 
-export type SubscriptionType = 
-  | 'singular_3m' 
-  | 'singular_6m' 
-  | 'singular_12m' 
-  | 'institucional_basico_12m' 
-  | 'institucional_corporativo_12m';
+export type SubscriptionType = 'jornal_mensal';
+
+export interface PlanPricing {
+  base_amount: number;
+  charge_amount: number;
+  fee_percent: number;
+  fee_amount: number;
+  net_amount: number;
+  currency: string;
+  is_test_mode: boolean;
+}
+
+export interface SubscriptionPlan {
+  id: SubscriptionType;
+  name: string;
+  amount: number;
+  charge_amount: number;
+  days: number;
+  subscription_type: 'diario' | 'semanal' | 'mensal' | 'anual';
+  pricing: PlanPricing;
+}
 
 export interface SubscriptionRequestCreate {
   subscription_type: 'diario' | 'semanal' | 'mensal' | 'anual';
@@ -105,6 +120,7 @@ export interface PaymentStatusResponse {
   fulfilled: boolean;
   msisdn: string;
   created_at: string;
+  pricing?: PlanPricing;
   subscription?: Subscription;
 }
 

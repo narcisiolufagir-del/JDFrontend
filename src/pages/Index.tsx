@@ -11,13 +11,16 @@ import { authAPI, userAPI, buildFileUrl } from "@/services/api";
 import { toast } from "@/hooks/use-toast";
 import { useSubscriptionRenewal } from "@/hooks/useSubscriptionRenewal";
 import { formatSubscriptionType, useUserAccount } from "@/hooks/useUserAccount";
-import type { User as IUser, Jornal } from "@/types/api";
+import type { User as IUser, Jornal, SubscriptionPlan } from "@/types/api";
+import { formatMoney } from "@/hooks/useUserAccount";
 import { JornaisGridSkeleton } from "@/components/news/NewsSkeletons";
 
 const Index = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
   
   // Hook para renovação automática de assinaturas
   useSubscriptionRenewal();
@@ -166,6 +169,34 @@ const Index = () => {
   };
 
   useEffect(() => {
+    userAPI
+      .getSubscriptionPlans()
+      .then((res) => setPlans(res.plans))
+      .catch(() => {
+        setPlans([
+          {
+            id: "jornal_mensal",
+            name: "Acesso ao Jornal O Destaque",
+            amount: 100,
+            charge_amount: 10,
+            days: 30,
+            subscription_type: "mensal",
+            pricing: {
+              base_amount: 100,
+              charge_amount: 10,
+              fee_percent: 4,
+              fee_amount: 0.4,
+              net_amount: 9.6,
+              currency: "MZN",
+              is_test_mode: true,
+            },
+          },
+        ]);
+      })
+      .finally(() => setPlansLoading(false));
+  }, []);
+
+  useEffect(() => {
     if (searchParams.get("planos") === "1" && currentUser) {
       setShowPlansModal(true);
       searchParams.delete("planos");
@@ -233,48 +264,7 @@ const Index = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  const plans = [
-    {
-      id: 'singular_3m',
-      name: 'Singular 3 Meses',
-      price: '4.000,00 MT',
-      period: '/3 meses',
-      features: ['Acesso semanal', 'Todas as edições', '1 usuário', 'Suporte básico'],
-      popular: false,
-    },
-    {
-      id: 'singular_6m',
-      name: 'Singular 6 Meses',
-      price: '6.500,00 MT',
-      period: '/6 meses',
-      features: ['Acesso semanal', 'Todas as edições', '1 usuário', 'Suporte prioritário'],
-      popular: true,
-    },
-    {
-      id: 'singular_12m',
-      name: 'Singular 12 Meses',
-      price: '10.000,00 MT',
-      period: '/ano',
-      features: ['Acesso semanal', 'Todas as edições', '1 usuário', 'Suporte premium', 'Melhor custo-benefício'],
-      popular: false,
-    },
-    {
-      id: 'institucional_basico_12m',
-      name: 'Institucional Básico',
-      price: '50.000,00 MT',
-      period: '/ano',
-      features: ['Acesso semanal', 'Todas as edições', 'Até 10 usuários', 'Notícias exclusivas', 'Suporte dedicado'],
-      popular: false,
-    },
-    {
-      id: 'institucional_corporativo_12m',
-      name: 'Institucional Corporativo',
-      price: '200.000,00 MT',
-      period: '/ano',
-      features: ['Acesso semanal e ilimitado', 'Todas as edições', 'Usuários ilimitados', 'Notícias exclusivas', 'Suporte VIP 24/7', 'Relatórios personalizados'],
-      popular: false,
-    },
-  ];
+  const selectedPlanData = plans.find((p) => p.id === selectedPlan);
 
   const handlePlanSelect = async (planId: string) => {
     if (!currentUser) {
@@ -575,51 +565,51 @@ const Index = () => {
           </DialogHeader>
 
           {!selectedPlan ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-              {plans.map((plan, index) => (
-                <Card
-                  key={plan.id}
-                  className={`relative p-6 bg-card/50 backdrop-blur-sm border transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer animate-fade-in ${
-                    plan.popular
-                      ? 'border-primary shadow-lg shadow-primary/20'
-                      : 'border-primary/20 hover:border-primary/50'
-                  }`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                  onClick={() => handlePlanSelect(plan.id)}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-primary to-accent rounded-full text-xs font-bold text-primary-foreground animate-glow">
-                      POPULAR
-                    </div>
-                  )}
-                  
-                  <div className="text-center mb-4">
-                    <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                        {plan.price}
-                      </span>
-                      <span className="text-sm text-muted-foreground">{plan.period}</span>
-                    </div>
-                  </div>
+            <div className="mt-6">
+              {plansLoading ? (
+                <div className="space-y-3">
+                  <div className="h-32 rounded-2xl bg-gray-100 animate-pulse" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {plans.map((plan) => (
+                    <Card
+                      key={plan.id}
+                      className="relative p-6 bg-white border border-[#2B58C5]/30 shadow-sm cursor-pointer hover:border-[#2B58C5]/60 transition-colors"
+                      onClick={() => handlePlanSelect(plan.id)}
+                    >
+                      <div className="text-center mb-4">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span className="text-3xl font-bold text-[#2B58C5]">
+                            {formatMoney(plan.pricing.charge_amount)}
+                          </span>
+                          <span className="text-sm text-gray-400">/ {plan.days} dias</span>
+                        </div>
+                        {plan.pricing.is_test_mode && (
+                          <p className="text-xs text-amber-600 mt-2">
+                            Modo teste — preço normal: {formatMoney(plan.amount)}
+                          </p>
+                        )}
+                      </div>
 
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                        <span className="text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                      <ul className="space-y-2 mb-6 text-sm text-gray-600">
+                        <li>• Todas as edições do jornal</li>
+                        <li>• Pagamento via M-Pesa (SkyWallet)</li>
+                        <li>• Acesso imediato após confirmação</li>
+                      </ul>
 
-                  <Button
-                    className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
-                    onClick={() => handlePlanSelect(plan.id)}
-                  >
-                    Selecionar
-                  </Button>
-                </Card>
-              ))}
+                      <Button
+                        className="w-full text-white hover:opacity-90"
+                        style={{ backgroundColor: "#2B58C5" }}
+                        onClick={() => handlePlanSelect(plan.id)}
+                      >
+                        Subscrever
+                      </Button>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           ) : paymentStep === "success" ? (
             <div className="space-y-6 mt-6 animate-fade-in text-center py-8">
@@ -643,24 +633,41 @@ const Index = () => {
           ) : (
             <div className="space-y-6 mt-6 animate-fade-in">
               <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20">
-                <h3 className="text-xl font-bold text-foreground mb-4">
-                  Plano: {plans.find(p => p.id === selectedPlan)?.name}
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  Plano: {selectedPlanData?.name}
                 </h3>
                 
                 {paymentStep === "pending" ? (
                   <div className="text-center py-8 space-y-4">
-                    <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-                    <p className="text-foreground font-medium">Aguardando confirmação M-Pesa...</p>
+                    <div className="w-10 h-10 rounded-full bg-gray-100 animate-pulse mx-auto" />
+                    <p className="text-gray-900 font-medium">Aguardando confirmação M-Pesa...</p>
                     <p className="text-sm text-gray-400">
                       Confirme o pagamento no telemóvel <strong>{msisdn}</strong>
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-center">
-                      <p className="text-sm text-gray-400">Valor a pagar</p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {plans.find(p => p.id === selectedPlan)?.price}
+                    <div className="rounded-lg bg-[#2B58C5]/5 border border-[#2B58C5]/20 p-4 space-y-2">
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Preço do jornal</span>
+                        <span>{formatMoney(selectedPlanData?.pricing.base_amount ?? 0)}</span>
+                      </div>
+                      {selectedPlanData?.pricing.is_test_mode && (
+                        <div className="flex justify-between text-sm text-amber-600">
+                          <span>Valor de teste (gateway)</span>
+                          <span>{formatMoney(selectedPlanData.pricing.charge_amount)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Taxa SkyWallet ({selectedPlanData?.pricing.fee_percent ?? 4}%)</span>
+                        <span>{formatMoney(selectedPlanData?.pricing.fee_amount ?? 0)}</span>
+                      </div>
+                      <div className="border-t border-[#2B58C5]/10 pt-2 flex justify-between font-semibold text-gray-900">
+                        <span>Total M-Pesa</span>
+                        <span>{formatMoney(selectedPlanData?.pricing.charge_amount ?? 0)}</span>
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        Recebe líquido: {formatMoney(selectedPlanData?.pricing.net_amount ?? 0)} após taxa do gateway
                       </p>
                     </div>
 

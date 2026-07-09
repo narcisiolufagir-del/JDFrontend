@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Menu, Loader2 } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -19,6 +19,7 @@ import {
 import { newsAPI, formatNewsDate, getCategoryColor } from "@/services/news";
 import type { NewsArticle, NewsCategory } from "@/types/news";
 import { cn } from "@/lib/utils";
+import { NewsListSkeleton } from "@/components/news/NewsSkeletons";
 
 const BRAND = "#2B58C5";
 const CHIP_BG = "#F0F2F6";
@@ -176,11 +177,7 @@ const Noticias = () => {
 
       {/* Content */}
       <div className="px-4">
-        {loading && (
-          <div className="flex justify-center py-6">
-            <Loader2 className="w-6 h-6 animate-spin" style={{ color: BRAND }} />
-          </div>
-        )}
+        {loading && <NewsListSkeleton />}
 
         {!loading && posts.length === 0 && (
           <div className="text-center py-16">

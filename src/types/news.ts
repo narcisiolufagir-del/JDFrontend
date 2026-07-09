@@ -15,6 +15,7 @@ export interface NewsArticle {
   date: string;
   image_url: string | null;
   category: NewsCategory | null;
+  author?: string | null;
 }
 
 export interface NewsListResponse {

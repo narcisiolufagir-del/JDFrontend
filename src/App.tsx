@@ -4,6 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
+import Noticias from "./pages/Noticias";
+import NoticiaDetalhe from "./pages/NoticiaDetalhe";
+import Favoritos from "./pages/Favoritos";
+import { MobileLayout } from "./layouts/MobileLayout";
 import NotFound from "./pages/NotFound";
 import FlipBook from "./pages/flipbook";
 import Profile from "./pages/Profile";
@@ -34,8 +38,13 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route element={<MobileLayout />}>
+              <Route path="/" element={<Noticias />} />
+              <Route path="/jornais" element={<Index />} />
+              <Route path="/favoritos" element={<Favoritos />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
+            <Route path="/noticia/:id" element={<NoticiaDetalhe />} />
             <Route path="/policy" element={<PrivacyPolicy />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />

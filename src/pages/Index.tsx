@@ -424,6 +424,8 @@ const Index = () => {
         onLogout={handleLogout}
         onSubscribe={() => setShowPlansModal(true)}
         logoutLoading={loading}
+        subtitle="Jornais Digitais"
+        searchPlaceholder="Buscar jornais..."
       />
 
       {/* Main Content */}
@@ -431,36 +433,36 @@ const Index = () => {
         {currentUser && currentUser.tipo_usuario !== "admin" && (
           <div className="mb-8">
             {hasActivePlan && activeSubscription ? (
-              <Card className="p-4 sm:p-5 border-emerald-500/20 bg-emerald-500/5">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <Card className="p-4 border-emerald-200 bg-emerald-50">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-full bg-emerald-500/15 p-2">
+                    <div className="rounded-full bg-emerald-100 p-2">
                       <Crown className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">
+                      <p className="font-semibold text-gray-900">
                         Plano activo · {formatSubscriptionType(activeSubscription.subscription_type)}
                       </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-gray-500">
                         Válido até {new Date(activeSubscription.end_date).toLocaleDateString("pt-PT")}
                       </p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => navigate("/profile")}>
                     Ver perfil
                   </Button>
                 </div>
               </Card>
             ) : (
-              <Card className="p-4 sm:p-5 border-primary/20 bg-primary/5">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <Card className="p-4 border-[#2B58C5]/20 bg-[#2B58C5]/5">
+                <div className="flex flex-col gap-3">
                   <div>
-                    <p className="font-semibold text-foreground">Ainda sem plano activo</p>
-                    <p className="text-sm text-gray-400">
+                    <p className="font-semibold text-gray-900">Ainda sem plano activo</p>
+                    <p className="text-sm text-gray-500">
                       Subscreva para ler todas as edições do Jornal Destaque.
                     </p>
                   </div>
-                  <Button size="sm" onClick={() => setShowPlansModal(true)}>
+                  <Button size="sm" className="w-full sm:w-auto text-white" style={{ backgroundColor: "#2B58C5" }} onClick={() => setShowPlansModal(true)}>
                     Ver planos
                   </Button>
                 </div>

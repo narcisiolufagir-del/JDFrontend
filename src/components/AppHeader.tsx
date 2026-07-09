@@ -1,4 +1,5 @@
-import { Menu, Search, User, LogIn, Crown, Shield, LogOut, CreditCard } from "lucide-react";
+import { Menu, Search, User, LogIn, Crown, Shield, LogOut, CreditCard, UserPlus, BookOpen, Heart } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,18 +11,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { User as IUser } from "@/types/api";
-import { formatSubscriptionType } from "@/hooks/useUserAccount";
 
 const BRAND = "#2B58C5";
+const CHIP_BG = "#F0F2F6";
 
 type AppHeaderProps = {
   searchQuery: string;
@@ -35,6 +28,8 @@ type AppHeaderProps = {
   onLogout: () => void;
   onSubscribe?: () => void;
   logoutLoading?: boolean;
+  subtitle?: string;
+  searchPlaceholder?: string;
 };
 
 export function AppHeader({
@@ -43,14 +38,21 @@ export function AppHeader({
   currentUser,
   hasActivePlan,
   activePlanLabel,
-  loading,
   onLogin,
   onSignup,
   onLogout,
   onSubscribe,
   logoutLoading,
+  subtitle = "Notícias e Jornais",
+  searchPlaceholder = "Pesquisar jornais...",
 }: AppHeaderProps) {
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeAnd = (fn?: () => void) => () => {
+    setMenuOpen(false);
+    fn?.();
+  };
 
   const planBadge = hasActivePlan ? (
     <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
@@ -61,189 +63,154 @@ export function AppHeader({
     <Badge
       variant="secondary"
       className="cursor-pointer bg-gray-100 text-gray-600"
-      onClick={onSubscribe}
+      onClick={closeAnd(onSubscribe)}
     >
       Sem plano
     </Badge>
   ) : null;
 
-  const menuItems = currentUser ? (
+  const navLinks = (
     <>
       <Button
         variant="ghost"
         className="w-full justify-start text-gray-700"
-        onClick={() => navigate("/profile")}
+        onClick={closeAnd(() => navigate("/"))}
       >
-        <User className="w-4 h-4 mr-2" />
-        Meu perfil
+        <Search className="w-4 h-4 mr-2" />
+        Notícias
       </Button>
-      {currentUser.tipo_usuario !== "admin" && (
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-gray-700"
-          onClick={onSubscribe}
-        >
-          <CreditCard className="w-4 h-4 mr-2" />
-          {hasActivePlan ? "Ver planos" : "Subscrever"}
-        </Button>
-      )}
-      {currentUser.tipo_usuario === "admin" && (
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-gray-700"
-          onClick={() => navigate("/admin")}
-        >
-          <Shield className="w-4 h-4 mr-2" />
-          Admin
-        </Button>
-      )}
       <Button
         variant="ghost"
-        className="w-full justify-start text-red-600 hover:text-red-600"
-        onClick={onLogout}
-        disabled={logoutLoading}
+        className="w-full justify-start text-gray-700"
+        onClick={closeAnd(() => navigate("/jornais"))}
       >
-        <LogOut className="w-4 h-4 mr-2" />
-        Sair
+        <BookOpen className="w-4 h-4 mr-2" />
+        Jornais Digitais
       </Button>
-    </>
-  ) : (
-    <>
-      <Button variant="ghost" className="w-full justify-start text-gray-700" onClick={onLogin}>
-        <LogIn className="w-4 h-4 mr-2" />
-        Entrar
-      </Button>
-      <Button className="w-full justify-start text-white" style={{ backgroundColor: BRAND }} onClick={onSignup}>
-        <User className="w-4 h-4 mr-2" />
-        Criar conta
+      <Button
+        variant="ghost"
+        className="w-full justify-start text-gray-700"
+        onClick={closeAnd(() => navigate("/favoritos"))}
+      >
+        <Heart className="w-4 h-4 mr-2" />
+        Favoritos
       </Button>
     </>
   );
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
-      <div className="px-4 py-3 space-y-3">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 min-w-0 shrink"
+    <header className="sticky top-0 z-40 bg-white px-4 pt-5 pb-3">
+      <div className="flex items-start justify-between mb-4">
+        <button type="button" onClick={() => navigate("/")} className="text-left">
+          <h1
+            className="text-[26px] font-extrabold tracking-tight leading-none"
+            style={{ color: BRAND }}
           >
-            <img
-              src="https://odestaque.co.mz/wp-content/uploads/2025/02/cropped-DESTAQUE-globo-SEM-FUNDO-180x180.png"
-              alt="Jornal Destaque"
-              className="w-8 h-8 object-contain shrink-0"
-            />
-            <div className="text-left">
-              <span className="text-lg font-extrabold leading-none" style={{ color: BRAND }}>
-                O DESTAQUE
-              </span>
-              <p className="text-[11px] text-gray-400 mt-0.5">Jornais Digitais</p>
-            </div>
-          </button>
+            O DESTAQUE
+          </h1>
+          <p className="text-[13px] text-gray-400 mt-1">{subtitle}</p>
+        </button>
 
-          <div className="ml-auto hidden md:flex items-center gap-2">
-            {planBadge}
-            {currentUser ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2 max-w-[180px] border-gray-200">
-                    <User className="w-4 h-4 shrink-0" />
-                    <span className="truncate">{currentUser.nome || currentUser.email}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52 bg-white">
-                  <DropdownMenuLabel className="truncate">
-                    {currentUser.nome || currentUser.email}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/profile")}>
-                    Meu perfil
-                  </DropdownMenuItem>
-                  {currentUser.tipo_usuario !== "admin" && (
-                    <DropdownMenuItem onClick={onSubscribe}>
-                      {hasActivePlan ? "Ver planos" : "Subscrever"}
-                    </DropdownMenuItem>
-                  )}
-                  {currentUser.tipo_usuario === "admin" && (
-                    <DropdownMenuItem onClick={() => navigate("/admin")}>
-                      Admin
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={onLogout}
-                    disabled={logoutLoading}
-                  >
-                    Sair
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <>
-                <Button variant="outline" size="sm" className="border-gray-200" onClick={onLogin}>
-                  Entrar
-                </Button>
-                <Button size="sm" style={{ backgroundColor: BRAND }} onClick={onSignup}>
-                  Cadastrar
-                </Button>
-              </>
-            )}
-          </div>
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <SheetTrigger asChild>
+            <button type="button" className="p-2 -mr-1 text-gray-800" aria-label="Menu">
+              <Menu className="w-6 h-6" strokeWidth={2} />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[280px] bg-white">
+            <SheetHeader>
+              <SheetTitle className="text-gray-900">Menu</SheetTitle>
+            </SheetHeader>
 
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden shrink-0 text-gray-800">
-                <Menu className="w-5 h-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] bg-white">
-              <SheetHeader>
-                <SheetTitle className="text-gray-900">Menu</SheetTitle>
-              </SheetHeader>
-              <div className="mt-6 space-y-2">
-                {currentUser && (
+            <div className="mt-6 space-y-2">
+              {currentUser ? (
+                <>
                   <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 mb-4">
                     <p className="text-sm font-medium truncate text-gray-900">
                       {currentUser.nome || currentUser.email}
                     </p>
                     <p className="text-xs text-gray-400 truncate">{currentUser.email}</p>
-                    <div className="mt-2">{planBadge}</div>
+                    {planBadge && <div className="mt-2">{planBadge}</div>}
                   </div>
-                )}
-                {menuItems}
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
 
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Buscar jornais..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-11 h-[46px] rounded-full border-0 bg-[#F0F2F6] text-gray-800 placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#2B58C5]/25"
-          />
-        </div>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-gray-700"
+                    onClick={closeAnd(() => navigate("/profile"))}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Meu perfil
+                  </Button>
+                  {navLinks}
+                  {currentUser.tipo_usuario !== "admin" && (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-gray-700"
+                      onClick={closeAnd(onSubscribe)}
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      {hasActivePlan ? "Ver planos" : "Subscrever"}
+                    </Button>
+                  )}
+                  {currentUser.tipo_usuario === "admin" && (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-gray-700"
+                      onClick={closeAnd(() => navigate("/admin"))}
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-red-600 hover:text-red-600"
+                    onClick={closeAnd(onLogout)}
+                    disabled={logoutLoading}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sair
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    className="w-full justify-center text-white h-11"
+                    style={{ backgroundColor: BRAND }}
+                    onClick={closeAnd(onLogin)}
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Entrar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-center h-11 border-[#2B58C5]/40 text-[#2B58C5]"
+                    onClick={closeAnd(onSignup)}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Criar conta
+                  </Button>
 
-        {loading ? null : (
-          <div className="md:hidden flex items-center justify-between gap-2">
-            {planBadge}
-            {!currentUser && (
-              <div className="flex gap-2 ml-auto">
-                <Button variant="outline" size="sm" className="border-gray-200" onClick={onLogin}>
-                  Entrar
-                </Button>
-                <Button size="sm" style={{ backgroundColor: BRAND }} onClick={onSignup}>
-                  Cadastrar
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+                  <div className="pt-2 space-y-1 border-t border-gray-100 mt-2">
+                    {navLinks}
+                  </div>
+                </>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400" />
+        <Input
+          type="text"
+          placeholder={searchPlaceholder}
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-11 h-[46px] rounded-full border-0 text-[14px] text-gray-800 placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#2B58C5]/25"
+          style={{ backgroundColor: CHIP_BG }}
+        />
       </div>
     </header>
   );

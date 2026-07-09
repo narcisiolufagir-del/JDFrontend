@@ -21,11 +21,14 @@ import type { NewsArticle, NewsCategory } from "@/types/news";
 import { cn } from "@/lib/utils";
 import { NewsListSkeleton, CategoryFilterSkeleton } from "@/components/news/NewsSkeletons";
 import {
-  RecentNewsCard,
+  CategoryNewsSection,
   FeaturedCategoryCard,
   HorizontalNewsCard,
   MiniNewsCard,
+  NewsHorizontalRow,
   NewsSection,
+  NewsVerticalList,
+  getCategoryLayout,
 } from "@/components/news/NewsCards";
 
 const BRAND = "#2B58C5";
@@ -65,7 +68,7 @@ const Noticias = () => {
         const [mainData, ...catResults] = await Promise.all([
           newsAPI.getPosts({ per_page: 20 }),
           ...cats.map((cat) =>
-            newsAPI.getPosts({ per_page: 4, category: cat.id })
+            newsAPI.getPosts({ per_page: 6, category: cat.id })
           ),
         ]);
         setPosts(mainData.posts);
@@ -97,7 +100,8 @@ const Noticias = () => {
   }, [carouselApi]);
 
   const highlights = posts.slice(0, 5);
-  const recent = posts.slice(0, 10);
+  const recent = posts.slice(0, 8);
+  const feedList = posts.slice(8, 14);
   const activeCategory = categories.find((c) => c.id === selectedCategory);
   const isHomeView = !selectedCategory && !searchQuery;
 
@@ -261,50 +265,32 @@ const Noticias = () => {
               </section>
             )}
 
-            {/* Recentes — cards verticais com imagem, categoria, título e excerpt */}
+            {/* Recentes — row horizontal */}
             <NewsSection
               title="Recentes"
               subtitle="As notícias mais novas do O Destaque"
             >
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
-                {recent.map((article) => (
-                  <RecentNewsCard
-                    key={article.id}
-                    article={article}
-                    onClick={() => openArticle(article)}
-                  />
-                ))}
-              </div>
+              <NewsHorizontalRow articles={recent} onArticleClick={openArticle} />
             </NewsSection>
 
-            {/* Secções por categoria */}
-            {categories.map((cat) => {
-              const items = categoryPosts[cat.id] ?? [];
-              if (items.length === 0) return null;
-              const [featured, ...rest] = items;
+            {/* Lista vertical após Recentes (sem título) */}
+            {feedList.length > 0 && (
+              <section className="mb-7">
+                <NewsVerticalList articles={feedList} onArticleClick={openArticle} />
+              </section>
+            )}
 
-              return (
-                <NewsSection
-                  key={cat.id}
-                  title={cat.name}
-                  subtitle={`Mais lidas e recentes em ${cat.name.toLowerCase()}`}
-                >
-                  <div className="space-y-3">
-                    <FeaturedCategoryCard
-                      article={featured}
-                      onClick={() => openArticle(featured)}
-                    />
-                    {rest.map((article) => (
-                      <HorizontalNewsCard
-                        key={article.id}
-                        article={article}
-                        onClick={() => openArticle(article)}
-                      />
-                    ))}
-                  </div>
-                </NewsSection>
-              );
-            })}
+            {/* Secções por categoria — layouts alternados */}
+            {categories.map((cat, index) => (
+              <CategoryNewsSection
+                key={cat.id}
+                title={cat.name}
+                subtitle={`Mais lidas e recentes em ${cat.name.toLowerCase()}`}
+                articles={categoryPosts[cat.id] ?? []}
+                layout={getCategoryLayout(index)}
+                onArticleClick={openArticle}
+              />
+            ))}
           </>
         )}
 

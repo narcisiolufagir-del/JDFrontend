@@ -32,18 +32,44 @@ export function NewsListSkeleton() {
         </div>
       </section>
 
-      {/* Category sections */}
-      {[0, 1].map((s) => (
-        <section key={s}>
-          <Skeleton className="h-5 w-24 mb-1 bg-gray-200" />
-          <Skeleton className="h-4 w-52 mb-3 bg-gray-100" />
-          <Skeleton className="h-[200px] w-full rounded-[16px] bg-gray-200 mb-3" />
-          <div className="space-y-3">
-            <Skeleton className="h-20 w-full rounded-[16px] bg-gray-100" />
-            <Skeleton className="h-20 w-full rounded-[16px] bg-gray-100" />
-          </div>
-        </section>
-      ))}
+      {/* Lista vertical após Recentes */}
+      <section className="space-y-3">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-[16px] bg-gray-100" />
+        ))}
+      </section>
+
+      {/* Category sections — layouts variados */}
+      <section>
+        <Skeleton className="h-5 w-24 mb-1 bg-gray-200" />
+        <Skeleton className="h-4 w-52 mb-3 bg-gray-100" />
+        <Skeleton className="h-[200px] w-full rounded-[16px] bg-gray-200 mb-3" />
+        <div className="space-y-3">
+          <Skeleton className="h-20 w-full rounded-[16px] bg-gray-100" />
+          <Skeleton className="h-20 w-full rounded-[16px] bg-gray-100" />
+        </div>
+      </section>
+
+      <section>
+        <Skeleton className="h-5 w-20 mb-1 bg-gray-200" />
+        <Skeleton className="h-4 w-48 mb-3 bg-gray-100" />
+        <div className="space-y-3">
+          <Skeleton className="h-20 w-full rounded-[16px] bg-gray-100" />
+          <Skeleton className="h-20 w-full rounded-[16px] bg-gray-100" />
+          <Skeleton className="h-20 w-full rounded-[16px] bg-gray-100" />
+        </div>
+      </section>
+
+      <section>
+        <Skeleton className="h-5 w-16 mb-1 bg-gray-200" />
+        <Skeleton className="h-4 w-44 mb-3 bg-gray-100" />
+        <Skeleton className="h-[200px] w-full rounded-[16px] bg-gray-200 mb-3" />
+        <div className="flex gap-3 overflow-hidden">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-[220px] w-[220px] flex-shrink-0 rounded-[16px] bg-gray-100" />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

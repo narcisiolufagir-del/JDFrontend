@@ -165,3 +165,105 @@ export function NewsSection({
     </section>
   );
 }
+
+/** Lista vertical de cards horizontais */
+export function NewsVerticalList({
+  articles,
+  onArticleClick,
+}: {
+  articles: NewsArticle[];
+  onArticleClick: (article: NewsArticle) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {articles.map((article) => (
+        <HorizontalNewsCard
+          key={article.id}
+          article={article}
+          onClick={() => onArticleClick(article)}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Row horizontal de cards verticais (estilo Recentes) */
+export function NewsHorizontalRow({
+  articles,
+  onArticleClick,
+}: {
+  articles: NewsArticle[];
+  onArticleClick: (article: NewsArticle) => void;
+}) {
+  return (
+    <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+      {articles.map((article) => (
+        <RecentNewsCard
+          key={article.id}
+          article={article}
+          onClick={() => onArticleClick(article)}
+        />
+      ))}
+    </div>
+  );
+}
+
+export type CategorySectionLayout = "featured-list" | "row" | "list" | "featured-row";
+
+const DEFAULT_CATEGORY_LAYOUTS: CategorySectionLayout[] = [
+  "featured-list",
+  "list",
+  "featured-row",
+  "row",
+];
+
+/** Secção de categoria com layout variável */
+export function CategoryNewsSection({
+  title,
+  subtitle,
+  articles,
+  layout,
+  onArticleClick,
+}: {
+  title: string;
+  subtitle: string;
+  articles: NewsArticle[];
+  layout: CategorySectionLayout;
+  onArticleClick: (article: NewsArticle) => void;
+}) {
+  if (articles.length === 0) return null;
+
+  const [featured, ...rest] = articles;
+
+  return (
+    <NewsSection title={title} subtitle={subtitle}>
+      {layout === "featured-list" && (
+        <div className="space-y-3">
+          <FeaturedCategoryCard article={featured} onClick={() => onArticleClick(featured)} />
+          <NewsVerticalList articles={rest} onArticleClick={onArticleClick} />
+        </div>
+      )}
+
+      {layout === "list" && (
+        <NewsVerticalList articles={articles} onArticleClick={onArticleClick} />
+      )}
+
+      {layout === "row" && (
+        <NewsHorizontalRow articles={articles} onArticleClick={onArticleClick} />
+      )}
+
+      {layout === "featured-row" && (
+        <div className="space-y-3">
+          <FeaturedCategoryCard article={featured} onClick={() => onArticleClick(featured)} />
+          {rest.length > 0 && (
+            <NewsHorizontalRow articles={rest} onArticleClick={onArticleClick} />
+          )}
+        </div>
+      )}
+    </NewsSection>
+  );
+}
+
+export function getCategoryLayout(index: number): CategorySectionLayout {
+  return DEFAULT_CATEGORY_LAYOUTS[index % DEFAULT_CATEGORY_LAYOUTS.length];
+}

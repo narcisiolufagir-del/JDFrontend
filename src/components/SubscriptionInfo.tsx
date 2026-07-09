@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, RefreshCw } from 'lucide-react';
+import { formatSubscriptionType } from '@/hooks/useUserAccount';
 import type { Subscription } from '@/types/api';
 
 interface SubscriptionInfoProps {
@@ -30,14 +31,14 @@ export const SubscriptionInfo: React.FC<SubscriptionInfoProps> = ({ subscription
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Assinatura {subscription.subscription_type}
+            Assinatura {formatSubscriptionType(subscription.subscription_type)}
           </CardTitle>
           <Badge variant={subscription.is_active ? "default" : "secondary"}>
             {subscription.is_active ? "Ativa" : "Inativa"}
           </Badge>
         </div>
         <CardDescription>
-          Renovação automática a cada {renewalDays} {renewalDays === 1 ? 'dia' : 'dias'}
+          Pagamento {subscription.payment_method === 'mpesa' ? 'M-Pesa' : subscription.payment_method}
         </CardDescription>
       </CardHeader>
       <CardContent>

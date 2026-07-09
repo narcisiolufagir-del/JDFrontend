@@ -107,3 +107,10 @@ export interface PaymentStatusResponse {
   created_at: string;
   subscription?: Subscription;
 }
+
+export interface JornalPurchase {
+  id: number;
+  user_id: number;
+  jornal_id: number;
+  created_at: string;
+}

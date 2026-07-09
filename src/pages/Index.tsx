@@ -1,20 +1,23 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, Sparkles, User, LogIn, Calendar, Filter, X, Check, Loader2, Smartphone } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Sparkles, User, LogIn, Calendar, Filter, X, Check, Loader2, Smartphone, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AppHeader } from "@/components/AppHeader";
 import { authAPI, userAPI, buildFileUrl } from "@/services/api";
 import { toast } from "@/hooks/use-toast";
 import { useSubscriptionRenewal } from "@/hooks/useSubscriptionRenewal";
+import { formatSubscriptionType, useUserAccount } from "@/hooks/useUserAccount";
 import type { User as IUser, Jornal } from "@/types/api";
 
 
 
 const Index = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   
   // Hook para renovação automática de assinaturas
@@ -37,6 +40,8 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<IUser | null>(null);
+  const { activeSubscription, hasActivePlan, loading: accountLoading, refresh: refreshAccount } =
+    useUserAccount(Boolean(currentUser) && currentUser?.tipo_usuario !== "admin");
 
   const resetAuthState = () => {
     setEmail("");
@@ -160,6 +165,14 @@ const Index = () => {
       return false;
     }
   };
+
+  useEffect(() => {
+    if (searchParams.get("planos") === "1" && currentUser) {
+      setShowPlansModal(true);
+      searchParams.delete("planos");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, currentUser]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -339,6 +352,7 @@ const Index = () => {
         if (result.success && result.fulfilled) {
           setPaymentStep("success");
           await refreshUserData();
+          await refreshAccount();
           toast({
             title: 'Pagamento confirmado!',
             description: 'A sua assinatura está activa. Já pode ler os jornais.',
@@ -411,92 +425,69 @@ const Index = () => {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 border-b border-border/50 backdrop-blur-xl bg-card/30">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            {/* Logo */}
-            <div className="flex items-center gap-3 animate-fade-in">
-              <img 
-                src="https://odestaque.co.mz/wp-content/uploads/2025/02/cropped-DESTAQUE-globo-SEM-FUNDO-180x180.png" 
-                alt="Jornal Destaque Logo" 
-                className="w-8 h-8 object-contain"
-              />
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Jornal Destaque
-              </h1>
-            </div>
-
-            {/* Search */}
-            <div className="relative flex-1 max-w-md animate-fade-in" style={{ animationDelay: "0.1s" }}>
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Buscar jornais..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-card/50 border-border/50 backdrop-blur-sm focus:ring-2 focus:ring-primary/50 transition-all"
-              />
-            </div>
-
-            {/* Auth / Account Buttons */}
-            <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              {currentUser ? (
-                <>
-                  {currentUser.tipo_usuario === 'admin' && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate('/admin')}
-                    >
-                      Admin
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate('/profile')}
-                    className="gap-2 border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-all"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="hidden sm:inline">{currentUser.nome || currentUser.email}</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={handleLogout}
-                    disabled={loading}
-                  >
-                    Sair
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowAuthModal("login")}
-                    className="gap-2 border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-all"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    <span className="hidden sm:inline">Entrar</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => setShowAuthModal("signup")}
-                    className="gap-2 bg-gradient-primary hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="hidden sm:inline">Cadastrar</span>
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        currentUser={currentUser}
+        hasActivePlan={hasActivePlan}
+        activePlanLabel={
+          activeSubscription
+            ? formatSubscriptionType(activeSubscription.subscription_type)
+            : currentUser?.tipo_subscricao
+              ? formatSubscriptionType(currentUser.tipo_subscricao)
+              : null
+        }
+        loading={accountLoading}
+        onLogin={() => setShowAuthModal("login")}
+        onSignup={() => setShowAuthModal("signup")}
+        onLogout={handleLogout}
+        onSubscribe={() => setShowPlansModal(true)}
+        logoutLoading={loading}
+      />
 
       {/* Main Content */}
       <main className="relative z-10 container mx-auto px-4 py-8">
+        {currentUser && currentUser.tipo_usuario !== "admin" && (
+          <div className="mb-8">
+            {hasActivePlan && activeSubscription ? (
+              <Card className="p-4 sm:p-5 border-emerald-500/20 bg-emerald-500/5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full bg-emerald-500/15 p-2">
+                      <Crown className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        Plano activo · {formatSubscriptionType(activeSubscription.subscription_type)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Válido até {new Date(activeSubscription.end_date).toLocaleDateString("pt-PT")}
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
+                    Ver perfil
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <Card className="p-4 sm:p-5 border-primary/20 bg-primary/5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-foreground">Ainda sem plano activo</p>
+                    <p className="text-sm text-muted-foreground">
+                      Subscreva para ler todas as edições do Jornal Destaque.
+                    </p>
+                  </div>
+                  <Button size="sm" onClick={() => setShowPlansModal(true)}>
+                    Ver planos
+                  </Button>
+                </div>
+              </Card>
+            )}
+          </div>
+        )}
+
         {/* Hero Section */}
         <div className="text-center mb-12 animate-fade-in-up">
           <h2 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-accent bg-clip-text text-transparent">

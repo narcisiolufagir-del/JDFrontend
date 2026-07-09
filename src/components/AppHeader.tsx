@@ -88,6 +88,11 @@ export function AppHeader({
     else navigate("/jornais");
   };
 
+  const handleSubscribe = () => {
+    if (onSubscribe) onSubscribe();
+    else navigate("/plans");
+  };
+
   const planBadge = hasActivePlan ? (
     <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
       <Crown className="w-3 h-3 mr-1" />
@@ -97,7 +102,7 @@ export function AppHeader({
     <Badge
       variant="secondary"
       className="cursor-pointer bg-gray-100 text-gray-600"
-      onClick={onSubscribe}
+      onClick={handleSubscribe}
     >
       Sem plano
     </Badge>
@@ -150,28 +155,14 @@ export function AppHeader({
                 className={({ isActive }) =>
                   cn(
                     "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    isActive
-                      ? "text-white"
-                      : "text-gray-600 hover:bg-gray-50"
+                    isActive ? "text-white" : "text-gray-600 hover:bg-gray-50"
                   )
                 }
+                style={({ isActive }) =>
+                  isActive ? { backgroundColor: BRAND } : undefined
+                }
               >
-                {({ isActive }) => (
-                  <span
-                    className={cn(isActive && "inline-block px-0 py-0 rounded-lg")}
-                    style={isActive ? { color: "white" } : undefined}
-                  >
-                    <span
-                      className={cn(
-                        "block px-3 py-2 -mx-3 -my-2 rounded-lg",
-                        isActive && "text-white"
-                      )}
-                      style={isActive ? { backgroundColor: BRAND } : undefined}
-                    >
-                      {label}
-                    </span>
-                  </span>
-                )}
+                {label}
               </NavLink>
             ))}
           </nav>
@@ -214,12 +205,12 @@ export function AppHeader({
                     <Shield className="w-4 h-4" />
                   </Button>
                 )}
-                {currentUser.tipo_usuario !== "admin" && onSubscribe && (
+                {currentUser.tipo_usuario !== "admin" && (
                   <Button
                     variant="outline"
                     size="sm"
                     className="border-[#2B58C5]/30 text-[#2B58C5]"
-                    onClick={onSubscribe}
+                    onClick={handleSubscribe}
                   >
                     <CreditCard className="w-4 h-4 mr-1.5" />
                     {hasActivePlan ? "Planos" : "Subscrever"}
@@ -297,11 +288,11 @@ export function AppHeader({
                       Meu perfil
                     </Button>
                     {mobileNavLinks}
-                    {currentUser.tipo_usuario !== "admin" && onSubscribe && (
+                    {currentUser.tipo_usuario !== "admin" && (
                       <Button
                         variant="ghost"
                         className="w-full justify-start text-gray-700"
-                        onClick={closeAnd(onSubscribe)}
+                        onClick={closeAnd(handleSubscribe)}
                       >
                         <CreditCard className="w-4 h-4 mr-2" />
                         {hasActivePlan ? "Ver planos" : "Subscrever"}

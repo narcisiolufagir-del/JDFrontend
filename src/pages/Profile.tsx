@@ -169,7 +169,7 @@ export default function Profile() {
               {activeSubscription ? (
                 <SubscriptionInfo subscription={activeSubscription} />
               ) : (
-                <Button onClick={() => navigate('/?planos=1')} className="w-full sm:w-auto">
+                <Button onClick={() => navigate('/plans')} className="w-full sm:w-auto">
                   Ver planos
                 </Button>
               )}

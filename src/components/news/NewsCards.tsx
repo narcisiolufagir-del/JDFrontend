@@ -48,7 +48,7 @@ export function RecentNewsCard({
         className
       )}
     >
-      <div className="w-full h-[130px] bg-gray-100">
+      <div className="w-full h-[130px] lg:h-[180px] bg-gray-100">
         <ArticleImage src={article.image_url} alt={article.title} />
       </div>
       <div className="p-3 space-y-1.5">
@@ -78,7 +78,7 @@ export function FeaturedCategoryCard({
       onClick={onClick}
       className="w-full text-left rounded-[16px] border border-gray-100 bg-white overflow-hidden shadow-sm"
     >
-      <div className="w-full h-[200px] bg-gray-100">
+      <div className="w-full h-[200px] lg:h-[260px] bg-gray-100">
         <ArticleImage src={article.image_url} alt={article.title} />
       </div>
       <div className="p-4 space-y-2">
@@ -260,7 +260,7 @@ export function CategoryNewsSection({
 
       {layout === "featured-row" && (
         <div className="space-y-3 lg:space-y-4">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-4">
+          <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
             <FeaturedCategoryCard article={featured} onClick={() => onArticleClick(featured)} />
             {rest.length > 0 && (
               <div className="hidden lg:block">
@@ -269,14 +269,14 @@ export function CategoryNewsSection({
             )}
           </div>
           {rest.length > 0 && (
-            <>
-              <div className="lg:hidden">
-                <NewsHorizontalRow articles={rest} onArticleClick={onArticleClick} />
-              </div>
-              <div className="hidden lg:block">
-                <NewsHorizontalRow articles={rest} onArticleClick={onArticleClick} />
-              </div>
-            </>
+            <div className="lg:hidden">
+              <NewsHorizontalRow articles={rest} onArticleClick={onArticleClick} />
+            </div>
+          )}
+          {rest.length > 2 && (
+            <div className="hidden lg:block">
+              <NewsHorizontalRow articles={rest.slice(2)} onArticleClick={onArticleClick} />
+            </div>
           )}
         </div>
       )}

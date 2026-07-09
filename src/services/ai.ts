@@ -1,6 +1,11 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ?? "https://jornaldestaque.bluesparkmz.com";
 
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export interface SummarizeCallbacks {
   onStart?: () => void;
   onDelta?: (text: string, fullText: string) => void;
@@ -18,25 +23,19 @@ function parseSseBlock(block: string): { event: string; data: string } | null {
   return data ? { event, data } : null;
 }
 
-export async function streamNewsSummary(
-  title: string,
-  content: string,
+async function streamAiEndpoint(
+  endpoint: string,
+  body: Record<string, unknown>,
   callbacks: SummarizeCallbacks
 ): Promise<void> {
-  const plainContent = content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-
-  const response = await fetch(`${API_BASE_URL}/api/ai/summarize`, {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      news_title: title,
-      news_content: plainContent,
-      action: "summary",
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
-    callbacks.onError?.("Não foi possível gerar o resumo.");
+    callbacks.onError?.("Não foi possível comunicar com a IA.");
     return;
   }
 
@@ -66,10 +65,52 @@ export async function streamNewsSummary(
         if (parsed.event === "start") callbacks.onStart?.();
         if (parsed.event === "delta") callbacks.onDelta?.(payload.text, payload.full_text);
         if (parsed.event === "done") callbacks.onDone?.(payload.reply || payload.full_text || "");
-        if (parsed.event === "error") callbacks.onError?.(payload.detail || "Erro ao gerar resumo.");
+        if (parsed.event === "error") callbacks.onError?.(payload.detail || "Erro na IA.");
       } catch {
         // ignore malformed chunks
       }
     }
   }
+}
+
+function plainNewsContent(content: string) {
+  return content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export async function streamNewsSummary(
+  title: string,
+  content: string,
+  callbacks: SummarizeCallbacks
+): Promise<void> {
+  await streamAiEndpoint(
+    "/api/ai/summarize",
+    {
+      news_title: title,
+      news_content: plainNewsContent(content),
+      action: "summary",
+    },
+    callbacks
+  );
+}
+
+export async function streamNewsChat(
+  title: string,
+  content: string,
+  question: string,
+  chatHistory: ChatMessage[],
+  callbacks: SummarizeCallbacks
+): Promise<void> {
+  await streamAiEndpoint(
+    "/api/ai/chat",
+    {
+      news_title: title,
+      news_content: plainNewsContent(content),
+      action: "chat",
+      chat_history: [
+        ...chatHistory.map((m) => ({ role: m.role, content: m.content })),
+        { role: "user", content: question },
+      ],
+    },
+    callbacks
+  );
 }

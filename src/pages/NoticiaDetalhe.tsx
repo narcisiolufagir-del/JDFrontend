@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -6,12 +6,11 @@ import {
   Heart,
   Calendar,
   User,
-  Sparkles,
 } from "lucide-react";
 import { newsAPI, formatNewsDate } from "@/services/news";
-import { streamNewsSummary } from "@/services/ai";
 import type { NewsArticle } from "@/types/news";
-import { NewsDetailSkeleton, AiSummarySkeleton } from "@/components/news/NewsSkeletons";
+import { NewsDetailSkeleton } from "@/components/news/NewsSkeletons";
+import { AiNewsFab } from "@/components/news/AiNewsFab";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -23,44 +22,16 @@ const NoticiaDetalhe = () => {
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
-  const [aiSummary, setAiSummary] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-
-  const loadSummary = useCallback(async (art: NewsArticle) => {
-    setAiLoading(true);
-    setAiError(null);
-    setAiSummary("");
-
-    await streamNewsSummary(art.title, art.content || art.excerpt, {
-      onStart: () => setAiLoading(true),
-      onDelta: (_text, fullText) => {
-        setAiSummary(fullText);
-        setAiLoading(false);
-      },
-      onDone: (fullText) => {
-        setAiSummary(fullText);
-        setAiLoading(false);
-      },
-      onError: (msg) => {
-        setAiError(msg);
-        setAiLoading(false);
-      },
-    });
-  }, []);
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     newsAPI
       .getPost(Number(id))
-      .then((art) => {
-        setArticle(art);
-        void loadSummary(art);
-      })
+      .then(setArticle)
       .catch(() => setArticle(null))
       .finally(() => setLoading(false));
-  }, [id, loadSummary]);
+  }, [id]);
 
   const handleShare = async () => {
     if (!article) return;
@@ -103,10 +74,9 @@ const NoticiaDetalhe = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-8">
-      {/* Header */}
+    <div className="min-h-screen bg-white pb-24">
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
-        <div className="flex items-center justify-between px-4 h-14">
+        <div className="flex items-center justify-between px-4 h-14 max-w-3xl mx-auto">
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -127,9 +97,8 @@ const NoticiaDetalhe = () => {
         </div>
       </header>
 
-      {/* Hero image */}
       {article.image_url && (
-        <div className="w-full h-56 bg-gray-100">
+        <div className="w-full h-56 lg:h-72 bg-gray-100 max-w-3xl mx-auto">
           <img
             src={article.image_url}
             alt={article.title}
@@ -138,13 +107,11 @@ const NoticiaDetalhe = () => {
         </div>
       )}
 
-      <div className="px-4 py-5 max-w-2xl mx-auto">
-        {/* Title */}
-        <h2 className="text-[20px] font-bold text-gray-900 leading-snug mb-3">
+      <div className="px-4 py-5 max-w-3xl mx-auto">
+        <h2 className="text-[20px] lg:text-2xl font-bold text-gray-900 leading-snug mb-3">
           {article.title}
         </h2>
 
-        {/* Meta */}
         <div className="flex items-center gap-4 text-[13px] text-gray-400 mb-5">
           <span className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
@@ -156,7 +123,6 @@ const NoticiaDetalhe = () => {
           </span>
         </div>
 
-        {/* Action buttons */}
         <div className="flex gap-3 mb-6">
           <button
             type="button"
@@ -181,40 +147,17 @@ const NoticiaDetalhe = () => {
           </button>
         </div>
 
-        {/* AI Summary */}
-        <section className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4" style={{ color: BRAND }} />
-            <h3 className="text-sm font-semibold text-gray-900">Resumo com IA</h3>
-          </div>
-
-          {aiLoading && !aiSummary && <AiSummarySkeleton />}
-
-          {aiError && !aiSummary && (
-            <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
-              {aiError}
-            </div>
-          )}
-
-          {aiSummary && (
-            <div className="rounded-xl border border-[#2B58C5]/20 bg-[#2B58C5]/5 p-4">
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {aiSummary}
-                {aiLoading && (
-                  <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#2B58C5] animate-pulse rounded-sm" />
-                )}
-              </p>
-            </div>
-          )}
-        </section>
-
-        {/* Article body */}
         <div
-          className="prose prose-sm max-w-none text-gray-700 leading-relaxed
+          className="prose prose-sm lg:prose-base max-w-none text-gray-700 leading-relaxed
             [&_p]:mb-4 [&_strong]:font-semibold [&_a]:text-[#2B58C5]"
           dangerouslySetInnerHTML={{ __html: article.content ?? "" }}
         />
       </div>
+
+      <AiNewsFab
+        title={article.title}
+        content={article.content || article.excerpt}
+      />
     </div>
   );
 };

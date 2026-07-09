@@ -6,7 +6,9 @@ import {
   LoginRequest, 
   RegisterRequest, 
   AuthResponse, 
-  CreateSubscriptionRequest 
+  CreateSubscriptionRequest,
+  PaymentStartRequest,
+  PaymentStatusResponse,
 } from '@/types/api';
 
 const API_BASE_URL =
@@ -139,6 +141,12 @@ export const userAPI = {
   
   getMySubscriptionRequests: (): Promise<any[]> =>
     api.get('/user/subscriptions/requests/my').then(res => res.data),
+
+  startSubscriptionPayment: (data: PaymentStartRequest): Promise<PaymentStatusResponse> =>
+    api.post('/user/payments/subscription', data).then(res => res.data),
+
+  checkPaymentStatus: (orderId: string): Promise<PaymentStatusResponse> =>
+    api.get(`/user/payments/${orderId}/status`).then(res => res.data),
   
   // Auto-renew subscription based on type
   renewSubscription: (subscriptionId: number): Promise<Subscription> =>

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Sparkles, User, LogIn, Calendar, Filter, X, Check } from "lucide-react";
+import { Search, Sparkles, User, LogIn, Calendar, Filter, X, Check, Loader2, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,9 @@ const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState<"login" | "signup" | null>(null);
   const [showPlansModal, setShowPlansModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [paymentReference, setPaymentReference] = useState("");
+  const [msisdn, setMsisdn] = useState("");
+  const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
+  const [paymentStep, setPaymentStep] = useState<"form" | "pending" | "success" | "failed">("form");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [jornais, setJornais] = useState<Jornal[]>([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -268,77 +270,112 @@ const Index = () => {
       setShowAuthModal("login");
       toast({
         title: 'Login necessário',
-        description: 'Faça login para solicitar uma assinatura.',
+        description: 'Faça login para subscrever.',
         variant: 'destructive',
       });
       return;
     }
 
     setSelectedPlan(planId);
+    setMsisdn(currentUser.telefone || "");
+    setPaymentStep("form");
+    setPaymentOrderId(null);
   };
 
-  // Map frontend plan IDs to backend subscription types
-  const mapPlanToSubscriptionType = (planId: string): 'diario' | 'semanal' | 'mensal' | 'anual' => {
-    const mapping: Record<string, 'diario' | 'semanal' | 'mensal' | 'anual'> = {
-      'singular_3m': 'mensal',    // 3 meses = mensal
-      'singular_6m': 'mensal',    // 6 meses = mensal  
-      'singular_12m': 'anual',    // 12 meses = anual
-      'institucional_basico_12m': 'anual',    // 12 meses = anual
-      'institucional_corporativo_12m': 'anual', // 12 meses = anual
-    };
-    
-    return mapping[planId] || 'mensal'; // fallback to mensal
+  const resetPaymentState = () => {
+    setSelectedPlan(null);
+    setMsisdn("");
+    setPaymentOrderId(null);
+    setPaymentStep("form");
+    setIsSubmitting(false);
   };
 
-  const handleSubscriptionRequest = async () => {
+  const handleMpesaPayment = async () => {
     if (!selectedPlan) return;
+    if (!msisdn.trim()) {
+      toast({
+        title: 'Número obrigatório',
+        description: 'Indique o número M-Pesa para receber o pedido de pagamento.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await userAPI.createSubscriptionRequest({
-        subscription_type: mapPlanToSubscriptionType(selectedPlan),
-        payment_reference: paymentReference || undefined,
+      const result = await userAPI.startSubscriptionPayment({
+        plan_id: selectedPlan as any,
+        msisdn: msisdn.trim(),
       });
 
+      setPaymentOrderId(result.order_id);
+      setPaymentStep("pending");
       toast({
-        title: 'Solicitação enviada!',
-        description: 'Sua solicitação de assinatura está em análise. Você receberá uma notificação em breve.',
+        title: 'Pedido enviado',
+        description: 'Confirme o pagamento no seu telemóvel M-Pesa.',
       });
-
-      setShowPlansModal(false);
-      setSelectedPlan(null);
-      setPaymentReference('');
     } catch (error: any) {
-      // Extract error message properly
-      let errorMessage = 'Tente novamente mais tarde.';
-      const data = error.response?.data;
-      
-      if (typeof data?.detail === 'string') {
-        errorMessage = data.detail;
-      } else if (Array.isArray(data?.detail)) {
-        // Handle Pydantic validation errors
-        const msgs = data.detail.map((e: any) => e?.msg || e?.detail).filter(Boolean);
-        if (msgs.length) {
-          errorMessage = msgs.join(' | ');
-        }
-      } else if (data?.detail && typeof data.detail === 'object') {
-        // Handle single validation error object
-        errorMessage = data.detail.msg || data.detail.detail || 'Erro de validação';
-      } else if (data?.detail) {
-        errorMessage = String(data.detail);
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
       toast({
-        title: 'Erro ao solicitar assinatura',
-        description: errorMessage,
+        title: 'Erro ao iniciar pagamento',
+        description: error?.message || 'Tente novamente mais tarde.',
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (paymentStep !== "pending" || !paymentOrderId) return;
+
+    let attempts = 0;
+    const maxAttempts = 40;
+
+    const poll = async () => {
+      attempts += 1;
+      try {
+        const result = await userAPI.checkPaymentStatus(paymentOrderId);
+
+        if (result.success && result.fulfilled) {
+          setPaymentStep("success");
+          await refreshUserData();
+          toast({
+            title: 'Pagamento confirmado!',
+            description: 'A sua assinatura está activa. Já pode ler os jornais.',
+          });
+          return;
+        }
+
+        if (result.status === "failed" || result.status === "cancelled") {
+          setPaymentStep("failed");
+          toast({
+            title: 'Pagamento não concluído',
+            description: 'O pagamento falhou ou foi cancelado. Tente novamente.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        if (attempts < maxAttempts) {
+          window.setTimeout(poll, 3000);
+        } else {
+          setPaymentStep("failed");
+          toast({
+            title: 'Tempo esgotado',
+            description: 'Não recebemos confirmação. Verifique o M-Pesa e tente novamente.',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        if (attempts < maxAttempts) {
+          window.setTimeout(poll, 3000);
+        }
+      }
+    };
+
+    const timer = window.setTimeout(poll, 3000);
+    return () => window.clearTimeout(timer);
+  }, [paymentStep, paymentOrderId]);
 
   const onClickJornal = async (j: Jornal) => {
     if (!currentUser) {
@@ -540,7 +577,13 @@ const Index = () => {
       </main>
 
       {/* Plans Modal */}
-      <Dialog open={showPlansModal} onOpenChange={setShowPlansModal}>
+      <Dialog
+        open={showPlansModal}
+        onOpenChange={(open) => {
+          setShowPlansModal(open);
+          if (!open) resetPaymentState();
+        }}
+      >
         <DialogContent className="max-w-5xl bg-background/95 backdrop-blur-xl border-primary/30 shadow-2xl shadow-primary/10">
           <DialogHeader>
             <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer">
@@ -598,50 +641,100 @@ const Index = () => {
                 </Card>
               ))}
             </div>
+          ) : paymentStep === "success" ? (
+            <div className="space-y-6 mt-6 animate-fade-in text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4">
+                <Check className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground">Assinatura activa!</h3>
+              <p className="text-muted-foreground">
+                O pagamento foi confirmado. Já pode aceder a todos os jornais.
+              </p>
+              <Button
+                onClick={() => {
+                  resetPaymentState();
+                  setShowPlansModal(false);
+                }}
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              >
+                Começar a ler
+              </Button>
+            </div>
           ) : (
             <div className="space-y-6 mt-6 animate-fade-in">
               <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20">
                 <h3 className="text-xl font-bold text-foreground mb-4">
-                  Plano Selecionado: {plans.find(p => p.id === selectedPlan)?.name}
+                  Plano: {plans.find(p => p.id === selectedPlan)?.name}
                 </h3>
                 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      Confirmação de Pagamento Mpesa/E-mola
-                    </label>
-                    <Input
-                      placeholder="Cole a mensagem de confirmação do Mpesa ou E-mola"
-                      value={paymentReference}
-                      onChange={(e) => setPaymentReference(e.target.value)}
-                      className="bg-background/50 border-primary/20 focus:border-primary"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Envie a mensagem de confirmação que você recebeu do Mpesa ou E-mola após realizar o pagamento
+                {paymentStep === "pending" ? (
+                  <div className="text-center py-8 space-y-4">
+                    <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
+                    <p className="text-foreground font-medium">Aguardando confirmação M-Pesa...</p>
+                    <p className="text-sm text-muted-foreground">
+                      Confirme o pagamento no telemóvel <strong>{msisdn}</strong>
                     </p>
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-center">
+                      <p className="text-sm text-muted-foreground">Valor a pagar</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {plans.find(p => p.id === selectedPlan)?.price}
+                      </p>
+                    </div>
 
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedPlan(null);
-                        setPaymentReference('');
-                      }}
-                      className="flex-1"
-                      disabled={isSubmitting}
-                    >
-                      Voltar
-                    </Button>
-                    <Button
-                      onClick={handleSubscriptionRequest}
-                      disabled={isSubmitting}
-                      className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                    >
-                      {isSubmitting ? 'Enviando...' : 'Solicitar Assinatura'}
-                    </Button>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">
+                        Número M-Pesa
+                      </label>
+                      <div className="relative">
+                        <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          placeholder="84xxxxxxx"
+                          value={msisdn}
+                          onChange={(e) => setMsisdn(e.target.value)}
+                          className="pl-10 bg-background/50 border-primary/20 focus:border-primary"
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Receberá um pedido M-Pesa neste número. Confirme para activar o acesso na hora.
+                      </p>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={resetPaymentState}
+                        className="flex-1"
+                        disabled={isSubmitting}
+                      >
+                        Voltar
+                      </Button>
+                      <Button
+                        onClick={handleMpesaPayment}
+                        disabled={isSubmitting}
+                        className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            A enviar...
+                          </>
+                        ) : (
+                          'Pagar com M-Pesa'
+                        )}
+                      </Button>
+                    </div>
+
+                    {paymentStep === "failed" && (
+                      <p className="text-sm text-red-500 text-center">
+                        Pagamento não confirmado. Tente novamente.
+                      </p>
+                    )}
                   </div>
-                </div>
+                )}
               </Card>
             </div>
           )}

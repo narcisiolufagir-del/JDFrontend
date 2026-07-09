@@ -88,3 +88,22 @@ export interface SubscriptionRequest {
   approved_at?: string;
   created_at: string;
 }
+
+export interface PaymentStartRequest {
+  plan_id: SubscriptionType;
+  msisdn?: string;
+}
+
+export interface PaymentStatusResponse {
+  order_id: string;
+  plan_id: string;
+  plan_name: string;
+  amount: number;
+  currency: string;
+  status: string;
+  success: boolean;
+  fulfilled: boolean;
+  msisdn: string;
+  created_at: string;
+  subscription?: Subscription;
+}

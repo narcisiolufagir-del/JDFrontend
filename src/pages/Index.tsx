@@ -28,6 +28,7 @@ const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState<"login" | "signup" | null>(null);
   const [showPlansModal, setShowPlansModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [selectedJornal, setSelectedJornal] = useState<Jornal | null>(null);
   const [msisdn, setMsisdn] = useState("");
   const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
   const [paymentStep, setPaymentStep] = useState<"form" | "pending" | "success" | "failed">("form");
@@ -175,12 +176,31 @@ const Index = () => {
       .catch(() => {
         setPlans([
           {
+            id: "edicao_unica",
+            name: "Edição única",
+            amount: 100,
+            charge_amount: 10,
+            days: 0,
+            subscription_type: "avulso",
+            kind: "purchase",
+            pricing: {
+              base_amount: 100,
+              charge_amount: 10,
+              fee_percent: 4,
+              fee_amount: 0.4,
+              net_amount: 9.6,
+              currency: "MZN",
+              is_test_mode: true,
+            },
+          },
+          {
             id: "jornal_mensal",
             name: "Acesso ao Jornal O Destaque",
             amount: 100,
             charge_amount: 10,
             days: 30,
             subscription_type: "mensal",
+            kind: "subscription",
             pricing: {
               base_amount: 100,
               charge_amount: 10,
@@ -265,6 +285,8 @@ const Index = () => {
   }, [searchQuery]);
 
   const selectedPlanData = plans.find((p) => p.id === selectedPlan);
+  const isPurchasePlan = (plan?: SubscriptionPlan | null) =>
+    plan?.kind === "purchase" || plan?.id === "edicao_unica";
 
   const handlePlanSelect = async (planId: string) => {
     if (!currentUser) {
@@ -274,6 +296,16 @@ const Index = () => {
         title: 'Login necessário',
         description: 'Faça login para subscrever.',
         variant: 'destructive',
+      });
+      return;
+    }
+
+    const plan = plans.find((p) => p.id === planId);
+    if (isPurchasePlan(plan) && !selectedJornal) {
+      setShowPlansModal(false);
+      toast({
+        title: 'Escolha uma edição',
+        description: 'Toque no jornal que pretende comprar para pagar a edição única.',
       });
       return;
     }
@@ -308,6 +340,7 @@ const Index = () => {
       const result = await userAPI.startSubscriptionPayment({
         plan_id: selectedPlan as any,
         msisdn: msisdn.trim(),
+        jornal_id: isPurchasePlan(selectedPlanData) ? selectedJornal?.id : undefined,
       });
 
       setPaymentOrderId(result.order_id);
@@ -344,7 +377,9 @@ const Index = () => {
           await refreshAccount();
           toast({
             title: 'Pagamento confirmado!',
-            description: 'A sua assinatura está activa. Já pode ler os jornais.',
+            description: result.jornal_id
+              ? 'Edição comprada. Já pode ler este jornal.'
+              : 'A sua assinatura está activa. Já pode ler os jornais.',
           });
           return;
         }
@@ -396,12 +431,22 @@ const Index = () => {
     const hasActiveSubscription = await checkActiveSubscription();
     
     if (hasActiveSubscription) {
-      // User has active subscription, can access
       navigate(`/jornal/${j.id}`);
-    } else {
-      // User doesn't have active subscription, show plans
-      setShowPlansModal(true);
+      return;
     }
+
+    // Verifica se comprou esta edição individualmente
+    try {
+      const purchases = await userAPI.getMyPurchases();
+      if (purchases.some((p) => p.jornal_id === j.id)) {
+        navigate(`/jornal/${j.id}`);
+        return;
+      }
+    } catch (_) {}
+
+    // Sem acesso: abre planos com esta edição pré-seleccionada
+    setSelectedJornal(j);
+    setShowPlansModal(true);
   };
 
   return (
@@ -429,7 +474,7 @@ const Index = () => {
       />
 
       {/* Main Content */}
-      <main className="px-4 py-5">
+      <main className="mx-auto max-w-7xl px-4 py-5 lg:px-6 lg:py-8">
         {currentUser && currentUser.tipo_usuario !== "admin" && (
           <div className="mb-8">
             {hasActivePlan && activeSubscription ? (
@@ -487,7 +532,7 @@ const Index = () => {
         {loadingList ? (
           <JornaisGridSkeleton />
         ) : jornais.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
             {jornais.map((jornal) => (
               <div
                 key={jornal.id}
@@ -553,91 +598,130 @@ const Index = () => {
         open={showPlansModal}
         onOpenChange={(open) => {
           setShowPlansModal(open);
-          if (!open) resetPaymentState();
+          if (!open) {
+            resetPaymentState();
+            setSelectedJornal(null);
+          }
         }}
       >
-        <DialogContent className="max-w-5xl bg-white border-gray-100">
+        <DialogContent className="max-w-lg w-[calc(100%-2rem)] bg-white border-gray-100 rounded-2xl max-h-[85vh] overflow-y-auto p-5 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-gray-900">
               Escolha seu Plano
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              Selecione o plano ideal para você e tenha acesso ilimitado aos nossos jornais
+              Compre uma edição ou assine para ter acesso ilimitado aos nossos jornais
             </DialogDescription>
           </DialogHeader>
 
           {!selectedPlan ? (
-            <div className="mt-6">
+            <div className="mt-4">
               {plansLoading ? (
                 <div className="space-y-3">
+                  <div className="h-32 rounded-2xl bg-gray-100 animate-pulse" />
                   <div className="h-32 rounded-2xl bg-gray-100 animate-pulse" />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
-                  {plans.map((plan) => (
-                    <Card
-                      key={plan.id}
-                      className="relative p-6 bg-white border border-[#2B58C5]/30 shadow-sm cursor-pointer hover:border-[#2B58C5]/60 transition-colors"
-                      onClick={() => handlePlanSelect(plan.id)}
-                    >
-                      <div className="text-center mb-4">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                        <div className="flex items-baseline justify-center gap-1">
-                          <span className="text-3xl font-bold text-[#2B58C5]">
-                            {formatMoney(plan.pricing.charge_amount)}
-                          </span>
-                          <span className="text-sm text-gray-400">/ {plan.days} dias</span>
-                        </div>
-                        {plan.pricing.is_test_mode && (
-                          <p className="text-xs text-amber-600 mt-2">
-                            Modo teste — preço normal: {formatMoney(plan.amount)}
-                          </p>
-                        )}
-                      </div>
-
-                      <ul className="space-y-2 mb-6 text-sm text-gray-600">
-                        <li>• Todas as edições do jornal</li>
-                        <li>• Pagamento via M-Pesa (SkyWallet)</li>
-                        <li>• Acesso imediato após confirmação</li>
-                      </ul>
-
-                      <Button
-                        className="w-full text-white hover:opacity-90"
-                        style={{ backgroundColor: "#2B58C5" }}
+                  {plans.map((plan) => {
+                    const purchase = isPurchasePlan(plan);
+                    return (
+                      <Card
+                        key={plan.id}
+                        className="relative p-5 bg-white border border-[#2B58C5]/30 shadow-sm cursor-pointer hover:border-[#2B58C5]/60 transition-colors"
                         onClick={() => handlePlanSelect(plan.id)}
                       >
-                        Subscrever
-                      </Button>
-                    </Card>
-                  ))}
+                        <div className="text-center mb-4">
+                          <h3 className="text-lg font-bold text-gray-900 mb-1">
+                            {purchase ? "Comprar esta edição" : plan.name}
+                          </h3>
+                          {purchase && (
+                            <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+                              {selectedJornal
+                                ? selectedJornal.titulo
+                                : "Uma edição específica do jornal"}
+                            </p>
+                          )}
+                          <div className="flex items-baseline justify-center gap-1">
+                            <span className="text-3xl font-bold text-[#2B58C5]">
+                              {formatMoney(plan.pricing.charge_amount)}
+                            </span>
+                            <span className="text-sm text-gray-400">
+                              {purchase ? "/ edição" : `/ ${plan.days} dias`}
+                            </span>
+                          </div>
+                          {plan.pricing.is_test_mode && (
+                            <p className="text-xs text-amber-600 mt-2">
+                              Modo teste — preço normal: {formatMoney(plan.amount)}
+                            </p>
+                          )}
+                        </div>
+
+                        <ul className="space-y-2 mb-5 text-sm text-gray-600">
+                          {purchase ? (
+                            <>
+                              <li>• Acesso vitalício a esta edição</li>
+                              <li>• Pagamento via M-Pesa (SkyWallet)</li>
+                              <li>• Leitura imediata após confirmação</li>
+                            </>
+                          ) : (
+                            <>
+                              <li>• Todas as edições do jornal</li>
+                              <li>• Pagamento via M-Pesa (SkyWallet)</li>
+                              <li>• Acesso imediato após confirmação</li>
+                            </>
+                          )}
+                        </ul>
+
+                        <Button
+                          className="w-full text-white hover:opacity-90"
+                          style={{ backgroundColor: "#2B58C5" }}
+                          onClick={() => handlePlanSelect(plan.id)}
+                        >
+                          {purchase ? "Comprar edição" : "Subscrever"}
+                        </Button>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </div>
           ) : paymentStep === "success" ? (
-            <div className="space-y-6 mt-6 animate-fade-in text-center py-8">
+            <div className="space-y-6 mt-4 animate-fade-in text-center py-8">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4">
                 <Check className="w-8 h-8 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-bold text-foreground">Assinatura activa!</h3>
-              <p className="text-muted-foreground">
-                O pagamento foi confirmado. Já pode aceder a todos os jornais.
+              <h3 className="text-xl font-bold text-gray-900">
+                {isPurchasePlan(selectedPlanData) ? "Edição comprada!" : "Assinatura activa!"}
+              </h3>
+              <p className="text-gray-500">
+                {isPurchasePlan(selectedPlanData)
+                  ? "O pagamento foi confirmado. Já pode ler esta edição."
+                  : "O pagamento foi confirmado. Já pode aceder a todos os jornais."}
               </p>
               <Button
+                className="text-white hover:opacity-90"
+                style={{ backgroundColor: "#2B58C5" }}
                 onClick={() => {
+                  const jornalId = isPurchasePlan(selectedPlanData) ? selectedJornal?.id : null;
                   resetPaymentState();
                   setShowPlansModal(false);
+                  setSelectedJornal(null);
+                  if (jornalId) navigate(`/jornal/${jornalId}`);
                 }}
-                className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
               >
                 Começar a ler
               </Button>
             </div>
           ) : (
-            <div className="space-y-6 mt-6 animate-fade-in">
-              <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Plano: {selectedPlanData?.name}
+            <div className="space-y-6 mt-4 animate-fade-in">
+              <Card className="p-5 bg-white border-[#2B58C5]/20">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  {isPurchasePlan(selectedPlanData) ? "Comprar edição" : `Plano: ${selectedPlanData?.name}`}
                 </h3>
+                {isPurchasePlan(selectedPlanData) && selectedJornal && (
+                  <p className="text-sm text-gray-500 mb-4 line-clamp-2">{selectedJornal.titulo}</p>
+                )}
                 
                 {paymentStep === "pending" ? (
                   <div className="text-center py-8 space-y-4">

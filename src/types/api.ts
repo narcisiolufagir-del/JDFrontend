@@ -63,7 +63,7 @@ export interface CreateSubscriptionRequest {
   payment_method?: 'digital' | 'fisico';
 }
 
-export type SubscriptionType = 'jornal_mensal';
+export type SubscriptionType = 'edicao_unica' | 'jornal_mensal';
 
 export interface PlanPricing {
   base_amount: number;
@@ -81,7 +81,8 @@ export interface SubscriptionPlan {
   amount: number;
   charge_amount: number;
   days: number;
-  subscription_type: 'diario' | 'semanal' | 'mensal' | 'anual';
+  subscription_type: 'diario' | 'semanal' | 'mensal' | 'anual' | 'avulso';
+  kind?: 'purchase' | 'subscription';
   pricing: PlanPricing;
 }
 
@@ -107,6 +108,7 @@ export interface SubscriptionRequest {
 export interface PaymentStartRequest {
   plan_id: SubscriptionType;
   msisdn?: string;
+  jornal_id?: number;
 }
 
 export interface PaymentStatusResponse {
@@ -120,6 +122,7 @@ export interface PaymentStatusResponse {
   fulfilled: boolean;
   msisdn: string;
   created_at: string;
+  jornal_id?: number;
   pricing?: PlanPricing;
   subscription?: Subscription;
 }

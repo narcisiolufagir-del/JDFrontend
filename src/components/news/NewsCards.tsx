@@ -33,15 +33,20 @@ function ArticleImage({
 export function RecentNewsCard({
   article,
   onClick,
+  className,
 }: {
   article: NewsArticle;
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex-shrink-0 w-[220px] text-left rounded-[16px] border border-gray-100 bg-white overflow-hidden shadow-sm"
+      className={cn(
+        "flex-shrink-0 w-[220px] text-left rounded-[16px] border border-gray-100 bg-white overflow-hidden shadow-sm",
+        className
+      )}
     >
       <div className="w-full h-[130px] bg-gray-100">
         <ArticleImage src={article.image_url} alt={article.title} />
@@ -175,7 +180,7 @@ export function NewsVerticalList({
   onArticleClick: (article: NewsArticle) => void;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-2">
       {articles.map((article) => (
         <HorizontalNewsCard
           key={article.id}
@@ -196,12 +201,13 @@ export function NewsHorizontalRow({
   onArticleClick: (article: NewsArticle) => void;
 }) {
   return (
-    <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+    <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-4 lg:overflow-visible xl:grid-cols-4">
       {articles.map((article) => (
         <RecentNewsCard
           key={article.id}
           article={article}
           onClick={() => onArticleClick(article)}
+          className="lg:w-full lg:flex-shrink"
         />
       ))}
     </div>
@@ -238,7 +244,7 @@ export function CategoryNewsSection({
   return (
     <NewsSection title={title} subtitle={subtitle}>
       {layout === "featured-list" && (
-        <div className="space-y-3">
+        <div className="space-y-3 lg:space-y-4">
           <FeaturedCategoryCard article={featured} onClick={() => onArticleClick(featured)} />
           <NewsVerticalList articles={rest} onArticleClick={onArticleClick} />
         </div>
@@ -253,10 +259,24 @@ export function CategoryNewsSection({
       )}
 
       {layout === "featured-row" && (
-        <div className="space-y-3">
-          <FeaturedCategoryCard article={featured} onClick={() => onArticleClick(featured)} />
+        <div className="space-y-3 lg:space-y-4">
+          <div className="lg:grid lg:grid-cols-2 lg:gap-4">
+            <FeaturedCategoryCard article={featured} onClick={() => onArticleClick(featured)} />
+            {rest.length > 0 && (
+              <div className="hidden lg:block">
+                <NewsVerticalList articles={rest.slice(0, 2)} onArticleClick={onArticleClick} />
+              </div>
+            )}
+          </div>
           {rest.length > 0 && (
-            <NewsHorizontalRow articles={rest} onArticleClick={onArticleClick} />
+            <>
+              <div className="lg:hidden">
+                <NewsHorizontalRow articles={rest} onArticleClick={onArticleClick} />
+              </div>
+              <div className="hidden lg:block">
+                <NewsHorizontalRow articles={rest} onArticleClick={onArticleClick} />
+              </div>
+            </>
           )}
         </div>
       )}

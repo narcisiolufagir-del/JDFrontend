@@ -1,21 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Menu } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
+import { AppHeader } from "@/components/AppHeader";
+import { CategoryChips } from "@/components/news/CategoryChips";
+import { CategorySidebar } from "@/components/news/CategorySidebar";
 import { newsAPI, formatNewsDate, getCategoryColor } from "@/services/news";
 import type { NewsArticle, NewsCategory } from "@/types/news";
 import { cn } from "@/lib/utils";
@@ -30,12 +23,13 @@ import {
   NewsVerticalList,
   getCategoryLayout,
 } from "@/components/news/NewsCards";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BRAND = "#2B58C5";
-const CHIP_BG = "#F0F2F6";
 
 const Noticias = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
@@ -105,236 +99,174 @@ const Noticias = () => {
   const activeCategory = categories.find((c) => c.id === selectedCategory);
   const isHomeView = !selectedCategory && !searchQuery;
 
+  const categoryFilter = (
+    <CategoryChips
+      categories={categories}
+      selectedCategory={selectedCategory}
+      onSelect={setSelectedCategory}
+    />
+  );
+
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white px-4 pt-5 pb-3">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1
-              className="text-[26px] font-extrabold tracking-tight leading-none"
-              style={{ color: BRAND }}
-            >
-              O DESTAQUE
-            </h1>
-            <p className="text-[13px] text-gray-400 mt-1">Notícias e Jornais</p>
-          </div>
-          <Sheet>
-            <SheetTrigger asChild>
-              <button type="button" className="p-2 -mr-1 text-gray-800" aria-label="Menu">
-                <Menu className="w-6 h-6" strokeWidth={2} />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] bg-white">
-              <SheetHeader>
-                <SheetTitle className="text-gray-900">Menu</SheetTitle>
-              </SheetHeader>
-              <div className="mt-6 space-y-1">
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/profile")}>
-                  Minha Conta
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/jornais")}>
-                  Jornais Digitais
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/policy")}>
-                  Política de Privacidade
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
+      <AppHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        currentUser={user}
+        onLogout={logout}
+        subtitle="Notícias e Jornais"
+        searchPlaceholder="Pesquisar notícias..."
+        categorySlot={categoryFilter}
+      />
 
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Pesquisar notícias, temas ou lugares..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-11 h-[46px] rounded-full border-0 text-[14px] text-gray-800 placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#2B58C5]/25"
-            style={{ backgroundColor: CHIP_BG }}
-          />
-        </div>
-      </header>
+      <div className="mx-auto max-w-7xl flex">
+        <CategorySidebar
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelect={setSelectedCategory}
+        />
 
-      {/* Category chips */}
-      <div className="px-4 pb-2 overflow-x-auto scrollbar-hide">
-        <div className="flex gap-2 min-w-max py-2">
-          <button
-            type="button"
-            onClick={() => setSelectedCategory(null)}
-            className={cn(
-              "px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
-              selectedCategory === null ? "text-white" : "text-gray-700"
-            )}
-            style={{ backgroundColor: selectedCategory === null ? BRAND : CHIP_BG }}
-          >
-            Tudo
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setSelectedCategory(cat.id)}
-              className={cn(
-                "px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
-                selectedCategory === cat.id ? "text-white" : "text-gray-700"
-              )}
-              style={{ backgroundColor: selectedCategory === cat.id ? BRAND : CHIP_BG }}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-      </div>
+        <main className="flex-1 min-w-0 px-4 py-5 lg:px-6 lg:py-6">
+          {loading && (isHomeView ? <NewsListSkeleton /> : <CategoryFilterSkeleton />)}
 
-      <div className="px-4 pb-4">
-        {loading && (isHomeView ? <NewsListSkeleton /> : <CategoryFilterSkeleton />)}
+          {!loading && posts.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-gray-400 text-sm">Nenhuma notícia encontrada.</p>
+            </div>
+          )}
 
-        {!loading && posts.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-gray-400 text-sm">Nenhuma notícia encontrada.</p>
-          </div>
-        )}
-
-        {!loading && posts.length > 0 && isHomeView && (
-          <>
-            {/* Hero slider */}
-            {highlights.length > 0 && (
-              <section className="mb-7">
-                <Carousel setApi={setCarouselApi} opts={{ loop: true }}>
-                  <CarouselContent className="-ml-0">
-                    {highlights.map((article) => (
-                      <CarouselItem key={article.id} className="pl-0">
-                        <button
-                          type="button"
-                          onClick={() => openArticle(article)}
-                          className="relative w-full h-[210px] rounded-[20px] overflow-hidden block text-left"
-                        >
-                          {article.image_url ? (
-                            <img
-                              src={article.image_url}
-                              alt={article.title}
-                              className="absolute inset-0 w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div
-                              className="absolute inset-0"
-                              style={{ background: `linear-gradient(135deg, ${BRAND}, #4a7ae0)` }}
-                            />
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
-                          {article.category && (
-                            <span
-                              className={cn(
-                                "absolute top-3 left-3 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white",
-                                getCategoryColor(article.category.slug)
-                              )}
-                            >
-                              {article.category.name}
-                            </span>
-                          )}
-                          <div className="absolute bottom-0 left-0 right-0 p-4">
-                            <h3 className="text-white font-bold text-[15px] leading-snug line-clamp-2">
-                              {article.title}
-                            </h3>
-                            <p className="text-white/75 text-[12px] mt-1.5">
-                              {formatNewsDate(article.date)}
-                            </p>
-                          </div>
-                        </button>
-                      </CarouselItem>
+          {!loading && posts.length > 0 && isHomeView && (
+            <>
+              {highlights.length > 0 && (
+                <section className="mb-7 lg:mb-10">
+                  <Carousel setApi={setCarouselApi} opts={{ loop: true }}>
+                    <CarouselContent className="-ml-0">
+                      {highlights.map((article) => (
+                        <CarouselItem key={article.id} className="pl-0">
+                          <button
+                            type="button"
+                            onClick={() => openArticle(article)}
+                            className="relative w-full h-[210px] lg:h-[380px] rounded-[20px] overflow-hidden block text-left"
+                          >
+                            {article.image_url ? (
+                              <img
+                                src={article.image_url}
+                                alt={article.title}
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                className="absolute inset-0"
+                                style={{ background: `linear-gradient(135deg, ${BRAND}, #4a7ae0)` }}
+                              />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                            {article.category && (
+                              <span
+                                className={cn(
+                                  "absolute top-3 left-3 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white",
+                                  getCategoryColor(article.category.slug)
+                                )}
+                              >
+                                {article.category.name}
+                              </span>
+                            )}
+                            <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-6">
+                              <h3 className="text-white font-bold text-[15px] lg:text-2xl leading-snug line-clamp-2 lg:line-clamp-3">
+                                {article.title}
+                              </h3>
+                              <p className="text-white/75 text-[12px] lg:text-sm mt-1.5">
+                                {formatNewsDate(article.date)}
+                              </p>
+                            </div>
+                          </button>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
+                  <div className="flex items-center justify-center gap-1.5 mt-3">
+                    {highlights.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => carouselApi?.scrollTo(i)}
+                        aria-label={`Slide ${i + 1}`}
+                        className={cn(
+                          "h-[6px] rounded-full transition-all",
+                          i === currentSlide ? "w-5" : "w-[6px] bg-gray-300"
+                        )}
+                        style={i === currentSlide ? { backgroundColor: BRAND } : undefined}
+                      />
                     ))}
-                  </CarouselContent>
-                </Carousel>
-                <div className="flex items-center justify-center gap-1.5 mt-3">
-                  {highlights.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => carouselApi?.scrollTo(i)}
-                      aria-label={`Slide ${i + 1}`}
-                      className={cn(
-                        "h-[6px] rounded-full transition-all",
-                        i === currentSlide ? "w-5" : "w-[6px] bg-gray-300"
-                      )}
-                      style={i === currentSlide ? { backgroundColor: BRAND } : undefined}
-                    />
-                  ))}
+                  </div>
+                </section>
+              )}
+
+              <NewsSection
+                title="Recentes"
+                subtitle="As notícias mais novas do O Destaque"
+              >
+                <NewsHorizontalRow articles={recent} onArticleClick={openArticle} />
+              </NewsSection>
+
+              {feedList.length > 0 && (
+                <section className="mb-7 lg:mb-10">
+                  <NewsVerticalList articles={feedList} onArticleClick={openArticle} />
+                </section>
+              )}
+
+              {categories.map((cat, index) => (
+                <CategoryNewsSection
+                  key={cat.id}
+                  title={cat.name}
+                  subtitle={`Mais lidas e recentes em ${cat.name.toLowerCase()}`}
+                  articles={categoryPosts[cat.id] ?? []}
+                  layout={getCategoryLayout(index)}
+                  onArticleClick={openArticle}
+                />
+              ))}
+            </>
+          )}
+
+          {!loading && posts.length > 0 && !isHomeView && (
+            <div className="space-y-4 lg:space-y-5">
+              {activeCategory && (
+                <div className="mb-2">
+                  <h2 className="text-[17px] lg:text-xl font-bold text-gray-900">{activeCategory.name}</h2>
+                  <p className="text-[13px] text-gray-400 mt-0.5">
+                    Mais lidas e recentes em {activeCategory.name.toLowerCase()}
+                  </p>
                 </div>
-              </section>
-            )}
+              )}
 
-            {/* Recentes — row horizontal */}
-            <NewsSection
-              title="Recentes"
-              subtitle="As notícias mais novas do O Destaque"
-            >
-              <NewsHorizontalRow articles={recent} onArticleClick={openArticle} />
-            </NewsSection>
+              {searchQuery && !activeCategory && (
+                <div className="mb-2">
+                  <h2 className="text-[17px] lg:text-xl font-bold text-gray-900">Resultados</h2>
+                  <p className="text-[13px] text-gray-400 mt-0.5">
+                    {posts.length} notícia{posts.length !== 1 ? "s" : ""} encontrada{posts.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+              )}
 
-            {/* Lista vertical após Recentes (sem título) */}
-            {feedList.length > 0 && (
-              <section className="mb-7">
-                <NewsVerticalList articles={feedList} onArticleClick={openArticle} />
-              </section>
-            )}
+              <div className="lg:grid lg:grid-cols-2 lg:gap-4 space-y-4 lg:space-y-0">
+                {posts[0] && (
+                  <MiniNewsCard article={posts[0]} onClick={() => openArticle(posts[0])} />
+                )}
+                {posts[1] && (
+                  <FeaturedCategoryCard
+                    article={posts[1]}
+                    onClick={() => openArticle(posts[1])}
+                  />
+                )}
+              </div>
 
-            {/* Secções por categoria — layouts alternados */}
-            {categories.map((cat, index) => (
-              <CategoryNewsSection
-                key={cat.id}
-                title={cat.name}
-                subtitle={`Mais lidas e recentes em ${cat.name.toLowerCase()}`}
-                articles={categoryPosts[cat.id] ?? []}
-                layout={getCategoryLayout(index)}
+              <NewsVerticalList
+                articles={posts.slice(2)}
                 onArticleClick={openArticle}
               />
-            ))}
-          </>
-        )}
-
-        {/* Vista filtrada por categoria ou pesquisa */}
-        {!loading && posts.length > 0 && !isHomeView && (
-          <div className="space-y-4">
-            {activeCategory && (
-              <div className="mb-2">
-                <h2 className="text-[17px] font-bold text-gray-900">{activeCategory.name}</h2>
-                <p className="text-[13px] text-gray-400 mt-0.5">
-                  Mais lidas e recentes em {activeCategory.name.toLowerCase()}
-                </p>
-              </div>
-            )}
-
-            {searchQuery && !activeCategory && (
-              <div className="mb-2">
-                <h2 className="text-[17px] font-bold text-gray-900">Resultados</h2>
-                <p className="text-[13px] text-gray-400 mt-0.5">
-                  {posts.length} notícia{posts.length !== 1 ? "s" : ""} encontrada{posts.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-            )}
-
-            {posts[0] && (
-              <MiniNewsCard article={posts[0]} onClick={() => openArticle(posts[0])} />
-            )}
-
-            {posts[1] && (
-              <FeaturedCategoryCard
-                article={posts[1]}
-                onClick={() => openArticle(posts[1])}
-              />
-            )}
-
-            {posts.slice(2).map((article) => (
-              <HorizontalNewsCard
-                key={article.id}
-                article={article}
-                onClick={() => openArticle(article)}
-              />
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

@@ -18,8 +18,8 @@ export function BottomNav() {
   if (hidden) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200">
-      <div className="flex items-stretch justify-around h-[62px] max-w-lg mx-auto px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 lg:hidden">
+      <div className="flex items-stretch justify-around h-[62px] max-w-lg mx-auto px-2 lg:max-w-none">
         {tabs.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}

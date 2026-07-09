@@ -19,7 +19,14 @@ import {
 import { newsAPI, formatNewsDate, getCategoryColor } from "@/services/news";
 import type { NewsArticle, NewsCategory } from "@/types/news";
 import { cn } from "@/lib/utils";
-import { NewsListSkeleton } from "@/components/news/NewsSkeletons";
+import { NewsListSkeleton, CategoryFilterSkeleton } from "@/components/news/NewsSkeletons";
+import {
+  RecentNewsCard,
+  FeaturedCategoryCard,
+  HorizontalNewsCard,
+  MiniNewsCard,
+  NewsSection,
+} from "@/components/news/NewsCards";
 
 const BRAND = "#2B58C5";
 const CHIP_BG = "#F0F2F6";
@@ -30,25 +37,48 @@ const Noticias = () => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [posts, setPosts] = useState<NewsArticle[]>([]);
+  const [categoryPosts, setCategoryPosts] = useState<Record<number, NewsArticle[]>>({});
   const [loading, setLoading] = useState(true);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const openArticle = (article: NewsArticle) => {
+    navigate(`/noticia/${article.id}`);
+  };
+
   const loadNews = useCallback(async () => {
     setLoading(true);
     try {
-      const [cats, data] = await Promise.all([
-        categories.length === 0 ? newsAPI.getCategories() : Promise.resolve(categories),
-        newsAPI.getPosts({
+      const cats =
+        categories.length > 0 ? categories : await newsAPI.getCategories();
+      if (categories.length === 0) setCategories(cats);
+
+      if (selectedCategory || searchQuery) {
+        const data = await newsAPI.getPosts({
           per_page: 20,
           search: searchQuery || undefined,
           category: selectedCategory ?? undefined,
-        }),
-      ]);
-      if (categories.length === 0) setCategories(cats);
-      setPosts(data.posts);
+        });
+        setPosts(data.posts);
+        setCategoryPosts({});
+      } else {
+        const [mainData, ...catResults] = await Promise.all([
+          newsAPI.getPosts({ per_page: 20 }),
+          ...cats.map((cat) =>
+            newsAPI.getPosts({ per_page: 4, category: cat.id })
+          ),
+        ]);
+        setPosts(mainData.posts);
+
+        const byCategory: Record<number, NewsArticle[]> = {};
+        cats.forEach((cat, i) => {
+          byCategory[cat.id] = catResults[i]?.posts ?? [];
+        });
+        setCategoryPosts(byCategory);
+      }
     } catch {
       setPosts([]);
+      setCategoryPosts({});
     } finally {
       setLoading(false);
     }
@@ -63,17 +93,13 @@ const Noticias = () => {
     if (!carouselApi) return;
     const onSelect = () => setCurrentSlide(carouselApi.selectedScrollSnap());
     carouselApi.on("select", onSelect);
-    return () => {
-      carouselApi.off("select", onSelect);
-    };
+    return () => carouselApi.off("select", onSelect);
   }, [carouselApi]);
 
   const highlights = posts.slice(0, 5);
-  const recent = posts.slice(0, 8);
-
-  const openArticle = (article: NewsArticle) => {
-    navigate(`/noticia/${article.id}`);
-  };
+  const recent = posts.slice(0, 10);
+  const activeCategory = categories.find((c) => c.id === selectedCategory);
+  const isHomeView = !selectedCategory && !searchQuery;
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
@@ -100,25 +126,13 @@ const Noticias = () => {
                 <SheetTitle className="text-gray-900">Menu</SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-1">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-gray-700 hover:text-gray-900"
-                  onClick={() => navigate("/profile")}
-                >
+                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/profile")}>
                   Minha Conta
                 </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-gray-700 hover:text-gray-900"
-                  onClick={() => navigate("/jornais")}
-                >
+                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/jornais")}>
                   Jornais Digitais
                 </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-gray-700 hover:text-gray-900"
-                  onClick={() => navigate("/policy")}
-                >
+                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/policy")}>
                   Política de Privacidade
                 </Button>
               </div>
@@ -126,7 +140,6 @@ const Noticias = () => {
           </Sheet>
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400" />
           <Input
@@ -150,9 +163,7 @@ const Noticias = () => {
               "px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
               selectedCategory === null ? "text-white" : "text-gray-700"
             )}
-            style={{
-              backgroundColor: selectedCategory === null ? BRAND : CHIP_BG,
-            }}
+            style={{ backgroundColor: selectedCategory === null ? BRAND : CHIP_BG }}
           >
             Tudo
           </button>
@@ -165,9 +176,7 @@ const Noticias = () => {
                 "px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors",
                 selectedCategory === cat.id ? "text-white" : "text-gray-700"
               )}
-              style={{
-                backgroundColor: selectedCategory === cat.id ? BRAND : CHIP_BG,
-              }}
+              style={{ backgroundColor: selectedCategory === cat.id ? BRAND : CHIP_BG }}
             >
               {cat.name}
             </button>
@@ -175,9 +184,8 @@ const Noticias = () => {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-4">
-        {loading && <NewsListSkeleton />}
+      <div className="px-4 pb-4">
+        {loading && (isHomeView ? <NewsListSkeleton /> : <CategoryFilterSkeleton />)}
 
         {!loading && posts.length === 0 && (
           <div className="text-center py-16">
@@ -185,18 +193,11 @@ const Noticias = () => {
           </div>
         )}
 
-        {!loading && posts.length > 0 && (
+        {!loading && posts.length > 0 && isHomeView && (
           <>
-            {/* Destaques */}
-            {highlights.length > 0 && !searchQuery && (
+            {/* Hero slider */}
+            {highlights.length > 0 && (
               <section className="mb-7">
-                <div className="mb-3">
-                  <h2 className="text-[17px] font-bold text-gray-900">Destaques</h2>
-                  <p className="text-[13px] text-gray-400 mt-0.5">
-                    As principais notícias do dia
-                  </p>
-                </div>
-
                 <Carousel setApi={setCarouselApi} opts={{ loop: true }}>
                   <CarouselContent className="-ml-0">
                     {highlights.map((article) => (
@@ -242,8 +243,6 @@ const Noticias = () => {
                     ))}
                   </CarouselContent>
                 </Carousel>
-
-                {/* Carousel dots */}
                 <div className="flex items-center justify-center gap-1.5 mt-3">
                   {highlights.map((_, i) => (
                     <button
@@ -262,42 +261,93 @@ const Noticias = () => {
               </section>
             )}
 
-            {/* Recentes — só imagens, scroll horizontal */}
-            <section className="pb-4">
-              <div className="mb-3">
-                <h2 className="text-[17px] font-bold text-gray-900">Recentes</h2>
-                <p className="text-[13px] text-gray-400 mt-0.5">
-                  As notícias mais novas do O Destaque
-                </p>
-              </div>
-
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
+            {/* Recentes — cards verticais com imagem, categoria, título e excerpt */}
+            <NewsSection
+              title="Recentes"
+              subtitle="As notícias mais novas do O Destaque"
+            >
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
                 {recent.map((article) => (
-                  <button
+                  <RecentNewsCard
                     key={article.id}
-                    type="button"
+                    article={article}
                     onClick={() => openArticle(article)}
-                    className="flex-shrink-0 w-[148px]"
-                  >
-                    <div className="w-[148px] h-[120px] rounded-[16px] overflow-hidden bg-gray-100">
-                      {article.image_url ? (
-                        <img
-                          src={article.image_url}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div
-                          className="w-full h-full"
-                          style={{ background: `linear-gradient(135deg, ${BRAND}33, ${BRAND}11)` }}
-                        />
-                      )}
-                    </div>
-                  </button>
+                  />
                 ))}
               </div>
-            </section>
+            </NewsSection>
+
+            {/* Secções por categoria */}
+            {categories.map((cat) => {
+              const items = categoryPosts[cat.id] ?? [];
+              if (items.length === 0) return null;
+              const [featured, ...rest] = items;
+
+              return (
+                <NewsSection
+                  key={cat.id}
+                  title={cat.name}
+                  subtitle={`Mais lidas e recentes em ${cat.name.toLowerCase()}`}
+                >
+                  <div className="space-y-3">
+                    <FeaturedCategoryCard
+                      article={featured}
+                      onClick={() => openArticle(featured)}
+                    />
+                    {rest.map((article) => (
+                      <HorizontalNewsCard
+                        key={article.id}
+                        article={article}
+                        onClick={() => openArticle(article)}
+                      />
+                    ))}
+                  </div>
+                </NewsSection>
+              );
+            })}
           </>
+        )}
+
+        {/* Vista filtrada por categoria ou pesquisa */}
+        {!loading && posts.length > 0 && !isHomeView && (
+          <div className="space-y-4">
+            {activeCategory && (
+              <div className="mb-2">
+                <h2 className="text-[17px] font-bold text-gray-900">{activeCategory.name}</h2>
+                <p className="text-[13px] text-gray-400 mt-0.5">
+                  Mais lidas e recentes em {activeCategory.name.toLowerCase()}
+                </p>
+              </div>
+            )}
+
+            {searchQuery && !activeCategory && (
+              <div className="mb-2">
+                <h2 className="text-[17px] font-bold text-gray-900">Resultados</h2>
+                <p className="text-[13px] text-gray-400 mt-0.5">
+                  {posts.length} notícia{posts.length !== 1 ? "s" : ""} encontrada{posts.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+            )}
+
+            {posts[0] && (
+              <MiniNewsCard article={posts[0]} onClick={() => openArticle(posts[0])} />
+            )}
+
+            {posts[1] && (
+              <FeaturedCategoryCard
+                article={posts[1]}
+                onClick={() => openArticle(posts[1])}
+              />
+            )}
+
+            {posts.slice(2).map((article) => (
+              <HorizontalNewsCard
+                key={article.id}
+                article={article}
+                onClick={() => openArticle(article)}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

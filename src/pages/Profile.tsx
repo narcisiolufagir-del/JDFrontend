@@ -27,6 +27,7 @@ import {
   useUserAccount,
 } from '@/hooks/useUserAccount';
 import type { Jornal, JornalPurchase } from '@/types/api';
+import { ProfileSkeleton, ProfileListSkeleton } from "@/components/news/NewsSkeletons";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -143,6 +144,9 @@ export default function Profile() {
       </header>
 
       <div className="px-4 py-5">
+        {accountLoading ? (
+          <ProfileSkeleton />
+        ) : (
         <div className="max-w-3xl mx-auto space-y-4">
           <Card className="border-gray-100 shadow-sm">
             <CardHeader>
@@ -162,9 +166,7 @@ export default function Profile() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {accountLoading ? (
-                <p className="text-sm text-muted-foreground">A carregar...</p>
-              ) : activeSubscription ? (
+              {activeSubscription ? (
                 <SubscriptionInfo subscription={activeSubscription} />
               ) : (
                 <Button onClick={() => navigate('/?planos=1')} className="w-full sm:w-auto">
@@ -194,9 +196,7 @@ export default function Profile() {
               <CardDescription>Histórico de pagamentos M-Pesa</CardDescription>
             </CardHeader>
             <CardContent>
-              {accountLoading ? (
-                <p className="text-sm text-muted-foreground">A carregar...</p>
-              ) : payments.length === 0 ? (
+              {payments.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Ainda não tem pagamentos registados.</p>
               ) : (
                 <div className="space-y-3">
@@ -246,7 +246,7 @@ export default function Profile() {
               </CardHeader>
               <CardContent>
                 {loadingPurchases ? (
-                  <p className="text-sm text-muted-foreground">A carregar...</p>
+                  <ProfileListSkeleton rows={2} />
                 ) : (
                   <div className="space-y-2">
                     {purchases.map((purchase) => (
@@ -359,6 +359,7 @@ export default function Profile() {
             </CardContent>
           </Card>
         </div>
+        )}
       </div>
     </div>
   );

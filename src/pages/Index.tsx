@@ -12,8 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { useSubscriptionRenewal } from "@/hooks/useSubscriptionRenewal";
 import { formatSubscriptionType, useUserAccount } from "@/hooks/useUserAccount";
 import type { User as IUser, Jornal } from "@/types/api";
-
-
+import { JornaisGridSkeleton } from "@/components/news/NewsSkeletons";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -31,7 +30,7 @@ const Index = () => {
   const [paymentStep, setPaymentStep] = useState<"form" | "pending" | "success" | "failed">("form");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [jornais, setJornais] = useState<Jornal[]>([]);
-  const [loadingList, setLoadingList] = useState(false);
+  const [loadingList, setLoadingList] = useState(true);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmSenha, setConfirmSenha] = useState("");
@@ -493,7 +492,9 @@ const Index = () => {
         {/* Filters (removido filtro por categoria para API; mantendo apenas busca) */}
 
         {/* Newspapers Grid (reais) */}
-        {jornais.length > 0 ? (
+        {loadingList ? (
+          <JornaisGridSkeleton />
+        ) : jornais.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {jornais.map((jornal) => (
               <div

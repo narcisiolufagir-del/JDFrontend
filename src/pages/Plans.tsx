@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PlansCheckout } from "@/components/plans/PlansCheckout";
 import { isPurchasePlan } from "@/constants/plans";
@@ -81,22 +80,13 @@ const Plans = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <AppHeader showSearch={false} subtitle="Planos e Subscrições" />
+      <AppHeader showSearch={false} />
 
-      <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6 lg:py-8">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-5"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar
-        </button>
-
-        <div className="mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Escolha seu Plano</h1>
-          <p className="text-gray-400 mt-1 text-sm lg:text-base">
-            Compre uma edição ou assine para ter acesso ilimitado aos nossos jornais
+      <main className="mx-auto max-w-4xl px-4 py-4 lg:px-6 lg:py-8">
+        <div className="mb-6">
+          <h1 className="text-[17px] lg:text-2xl font-bold text-gray-900">Planos e Subscrições</h1>
+          <p className="text-[13px] lg:text-base text-gray-400 mt-0.5">
+            Compre uma edição ou subscreva para acesso ilimitado aos jornais
           </p>
         </div>
 

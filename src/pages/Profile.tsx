@@ -140,9 +140,14 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader showSearch={false} subtitle="Minha conta" />
+      <AppHeader showSearch={false} />
 
-      <div className="mx-auto max-w-3xl px-4 py-5 lg:py-6 space-y-4">
+      <div className="mx-auto max-w-3xl px-4 py-4 lg:py-6 space-y-4">
+        <div className="mb-1">
+          <h1 className="text-[17px] lg:text-xl font-bold text-gray-900">Minha conta</h1>
+          <p className="text-[13px] text-gray-400 mt-0.5">Perfil, jornais e subscrição</p>
+        </div>
+
         {!user ? (
           <div className="rounded-2xl bg-white border border-gray-100 p-6 text-center shadow-sm">
             <div

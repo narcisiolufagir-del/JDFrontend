@@ -61,7 +61,6 @@ export function HeaderSearchBar({
 type AppHeaderProps = {
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
-  subtitle?: string;
   searchPlaceholder?: string;
   showSearch?: boolean;
 };
@@ -75,7 +74,6 @@ const desktopNav = [
 export function AppHeader({
   searchQuery = "",
   onSearchChange = () => {},
-  subtitle = "Notícias e Jornais",
   searchPlaceholder = "Pesquisar...",
   showSearch = true,
 }: AppHeaderProps) {
@@ -125,7 +123,7 @@ export function AppHeader({
               O DESTAQUE
             </h1>
             <p className="hidden sm:block text-[11px] lg:text-xs text-gray-400 mt-0.5 truncate">
-              {subtitle}
+              Notícias e Jornais
             </p>
           </button>
 

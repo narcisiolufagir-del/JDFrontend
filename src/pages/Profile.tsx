@@ -34,6 +34,8 @@ import {
 } from "@/hooks/useUserAccount";
 import type { Jornal, JornalPurchase } from "@/types/api";
 import { ProfileSkeleton } from "@/components/news/NewsSkeletons";
+import { PwaInstallCard } from "@/components/PwaInstallCard";
+import { formatPaidJornaisCount } from "@/hooks/usePwaInstall";
 import { cn } from "@/lib/utils";
 
 const BRAND = "#2B58C5";
@@ -42,7 +44,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { openLogin, openSignup } = useAuthModal();
-  const { subscriptions, payments, activeSubscription, hasActivePlan, loading, refresh } =
+  const { subscriptions, payments, activeSubscription, hasActivePlan, loading } =
     useUserAccount(Boolean(user));
 
   const [purchases, setPurchases] = useState<JornalPurchase[]>([]);
@@ -97,6 +99,7 @@ export default function Profile() {
     [purchases]
   );
 
+  const paidJornaisCount = purchases.length;
   const userInitial = (user?.nome || user?.email || "U").charAt(0).toUpperCase();
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -226,9 +229,19 @@ export default function Profile() {
                         {new Date(activeSubscription.end_date).toLocaleDateString("pt-PT")}
                       </p>
                     ) : (
-                      <p className="text-sm text-gray-400 mt-0.5">
-                        Subscreva para ler todas as edições.
-                      </p>
+                      <div className="mt-0.5 space-y-1">
+                        <p className="text-sm text-gray-400">
+                          Subscreva para ler todas as edições.
+                        </p>
+                        {!loadingPurchases && paidJornaisCount > 0 && (
+                          <span
+                            className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                            style={{ backgroundColor: `${BRAND}12`, color: BRAND }}
+                          >
+                            {formatPaidJornaisCount(paidJornaisCount)}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -542,6 +555,8 @@ export default function Profile() {
             </Collapsible>
           </>
         )}
+
+        <PwaInstallCard />
       </div>
     </div>
   );

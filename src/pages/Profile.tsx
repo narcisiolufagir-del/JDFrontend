@@ -34,7 +34,6 @@ import {
 } from "@/hooks/useUserAccount";
 import type { Jornal, JornalPurchase } from "@/types/api";
 import { ProfileSkeleton } from "@/components/news/NewsSkeletons";
-import { PwaInstallCard } from "@/components/PwaInstallCard";
 import { formatPaidJornaisCount } from "@/hooks/usePwaInstall";
 import { cn } from "@/lib/utils";
 
@@ -145,7 +144,7 @@ export default function Profile() {
     <div className="min-h-screen bg-gray-50">
       <AppHeader showSearch={false} />
 
-      <div className="mx-auto max-w-3xl px-4 py-4 lg:py-6 space-y-4">
+      <div className="mx-auto max-w-3xl px-4 py-4 lg:py-6 pb-28 lg:pb-6 space-y-4">
         <div className="mb-1">
           <h1 className="text-[17px] lg:text-xl font-bold text-gray-900">Minha conta</h1>
           <p className="text-[13px] text-gray-400 mt-0.5">Perfil, jornais e subscrição</p>
@@ -555,8 +554,6 @@ export default function Profile() {
             </Collapsible>
           </>
         )}
-
-        <PwaInstallCard />
       </div>
     </div>
   );

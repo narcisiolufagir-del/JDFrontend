@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-const DISMISS_KEY = "pwa-install-dismissed";
+const DISMISS_KEY = "pwa-install-dismissed-session";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -19,16 +19,30 @@ function detectIOS() {
   return /iPad|iPhone|iPod/.test(ua) && !(window as Window & { MSStream?: unknown }).MSStream;
 }
 
+function detectAndroid() {
+  return /Android/i.test(window.navigator.userAgent);
+}
+
+/** Já está dentro de app nativa / WebView — não faz sentido pedir instalação PWA */
+function detectInAppShell() {
+  const ua = window.navigator.userAgent;
+  return /; wv\)|\(.*wv.*\)|WebView/i.test(ua);
+}
+
 export function usePwaInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(detectInstalled);
   const [isIOS, setIsIOS] = useState(detectIOS);
+  const [isAndroid, setIsAndroid] = useState(detectAndroid);
+  const [inAppShell, setInAppShell] = useState(detectInAppShell);
   const [isDismissed, setIsDismissed] = useState(
-    () => localStorage.getItem(DISMISS_KEY) === "1"
+    () => sessionStorage.getItem(DISMISS_KEY) === "1"
   );
 
   useEffect(() => {
     setIsIOS(detectIOS());
+    setIsAndroid(detectAndroid());
+    setInAppShell(detectInAppShell());
 
     const onInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -49,7 +63,8 @@ export function usePwaInstall() {
     };
   }, []);
 
-  const canInstall = !isInstalled && !isDismissed && (Boolean(deferredPrompt) || isIOS);
+  // Mostrar sempre que não está instalado como PWA (excepto se o user fechou nesta sessão)
+  const canInstall = !isInstalled && !isDismissed;
 
   const promptInstall = useCallback(async () => {
     if (!deferredPrompt) return false;
@@ -61,7 +76,7 @@ export function usePwaInstall() {
   }, [deferredPrompt]);
 
   const dismiss = useCallback(() => {
-    localStorage.setItem(DISMISS_KEY, "1");
+    sessionStorage.setItem(DISMISS_KEY, "1");
     setIsDismissed(true);
   }, []);
 
@@ -69,6 +84,7 @@ export function usePwaInstall() {
     canInstall,
     isInstalled,
     isIOS,
+    isAndroid,
     hasNativePrompt: Boolean(deferredPrompt),
     promptInstall,
     dismiss,

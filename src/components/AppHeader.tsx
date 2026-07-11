@@ -12,7 +12,7 @@ import {
   Heart,
   Newspaper,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,34 @@ import type { User as IUser } from "@/types/api";
 const BRAND = "#2B58C5";
 const CHIP_BG = "#F0F2F6";
 
+type HeaderSearchBarProps = {
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  searchPlaceholder?: string;
+  className?: string;
+};
+
+export function HeaderSearchBar({
+  searchQuery,
+  onSearchChange,
+  searchPlaceholder = "Pesquisar...",
+  className,
+}: HeaderSearchBarProps) {
+  return (
+    <div className={cn("relative", className)}>
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      <Input
+        type="text"
+        placeholder={searchPlaceholder}
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="pl-9 h-9 lg:h-10 rounded-full border-0 text-sm text-gray-800 placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#2B58C5]/25"
+        style={{ backgroundColor: CHIP_BG }}
+      />
+    </div>
+  );
+}
+
 type AppHeaderProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -45,7 +73,6 @@ type AppHeaderProps = {
   subtitle?: string;
   searchPlaceholder?: string;
   showSearch?: boolean;
-  categorySlot?: ReactNode;
 };
 
 const desktopNav = [
@@ -68,7 +95,6 @@ export function AppHeader({
   subtitle = "Notícias e Jornais",
   searchPlaceholder = "Pesquisar...",
   showSearch = true,
-  categorySlot,
 }: AppHeaderProps) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -167,17 +193,15 @@ export function AppHeader({
             ))}
           </nav>
 
-          {/* Search na barra */}
+          <div className="flex-1 min-w-0 lg:hidden" aria-hidden />
+
+          {/* Search no header — apenas desktop */}
           {showSearch && (
-            <div className="flex-1 min-w-0 max-w-none lg:max-w-md lg:ml-auto relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <Input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-9 h-9 lg:h-10 rounded-full border-0 text-sm text-gray-800 placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#2B58C5]/25"
-                style={{ backgroundColor: CHIP_BG }}
+            <div className="hidden lg:block flex-1 min-w-0 max-w-md ml-auto">
+              <HeaderSearchBar
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                searchPlaceholder={searchPlaceholder}
               />
             </div>
           )}
@@ -347,11 +371,6 @@ export function AppHeader({
             </SheetContent>
           </Sheet>
         </div>
-
-        {/* Tags/categorias no mobile — dentro do header */}
-        {categorySlot && (
-          <div className="lg:hidden pb-2.5 -mt-0.5">{categorySlot}</div>
-        )}
       </div>
     </header>
   );

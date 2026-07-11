@@ -4,7 +4,7 @@ import { User, LogIn, Calendar, X, Crown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { AppHeader } from "@/components/AppHeader";
+import { AppHeader, HeaderSearchBar } from "@/components/AppHeader";
 import { authAPI, userAPI, buildFileUrl } from "@/services/api";
 import { useSubscriptionRenewal } from "@/hooks/useSubscriptionRenewal";
 import { formatSubscriptionType, useUserAccount } from "@/hooks/useUserAccount";
@@ -273,14 +273,21 @@ const Index = () => {
         onLogout={handleLogout}
         onSubscribe={() => navigate("/plans")}
         logoutLoading={loading}
-        subtitle="Jornais Digitais"
+        subtitle="Notícias e Jornais"
         searchPlaceholder="Buscar jornais..."
       />
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-5 lg:px-6 lg:py-8">
+      <main className="mx-auto max-w-7xl px-4 py-4 lg:px-6 lg:py-8">
+        <div className="lg:hidden mb-4">
+          <HeaderSearchBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder="Buscar jornais..."
+          />
+        </div>
+
         {currentUser && currentUser.tipo_usuario !== "admin" && (
-          <div className="mb-8">
+          <div className="mb-6">
             {hasActivePlan && activeSubscription ? (
               <Card className="p-4 border-emerald-200 bg-emerald-50">
                 <div className="flex flex-col gap-3">
@@ -320,31 +327,27 @@ const Index = () => {
           </div>
         )}
 
-        {/* Hero Section */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">
+        <div className="mb-5">
+          <h2 className="text-[17px] lg:text-xl font-bold text-gray-900 mb-0.5">
             Jornais Digitais
           </h2>
-          <p className="text-sm text-gray-400">
+          <p className="text-[13px] text-gray-400">
             Leia as últimas edições do Jornal O Destaque
           </p>
         </div>
 
-        {/* Filters (removido filtro por categoria para API; mantendo apenas busca) */}
-
-        {/* Newspapers Grid (reais) */}
         {loadingList ? (
           <JornaisGridSkeleton />
         ) : jornais.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {jornais.map((jornal) => (
               <div
                 key={jornal.id}
                 className="group cursor-pointer"
                 onClick={() => onClickJornal(jornal)}
               >
-                <div className="relative overflow-hidden rounded-[20px] bg-white border border-gray-100 shadow-sm transition-all active:scale-[0.98]">
-                  <div className="relative h-52 overflow-hidden">
+                <div className="relative overflow-hidden rounded-[16px] sm:rounded-[20px] bg-white border border-gray-100 shadow-sm transition-all active:scale-[0.98]">
+                  <div className="relative h-36 sm:h-52 overflow-hidden">
                     {jornal.capa ? (
                       <img
                         src={buildFileUrl(jornal.capa) || ''}
@@ -359,18 +362,18 @@ const Index = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                   </div>
 
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>{new Date(jornal.data_publicacao).toLocaleDateString("pt-PT")}</span>
+                  <div className="p-3 sm:p-4 space-y-1.5 sm:space-y-2">
+                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-gray-400">
+                      <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                      <span className="truncate">{new Date(jornal.data_publicacao).toLocaleDateString("pt-PT")}</span>
                     </div>
 
-                    <h3 className="text-base font-bold text-gray-900 line-clamp-2">
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900 line-clamp-2 leading-snug">
                       {jornal.titulo}
                     </h3>
 
                     <Button
-                      className="w-full text-white hover:opacity-90"
+                      className="w-full text-white hover:opacity-90 h-8 sm:h-10 text-xs sm:text-sm"
                       style={{ backgroundColor: "#2B58C5" }}
                       onClick={(e) => {
                         e.stopPropagation();

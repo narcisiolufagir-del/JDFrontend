@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { userAPI, adminAPI, buildFileUrl } from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, RotateCcw, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, Download, Monitor, FileText } from 'lucide-react';
 import type { Jornal } from '@/types/api';
-import FlipbookViewer from '@/components/flipbook/FlipbookViewer';
 import { useAuth } from '@/contexts/AuthContext';
+
+const BRAND = "#2B58C5";
 
 export default function FlipBook() {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +17,6 @@ export default function FlipBook() {
   const [error, setError] = useState<string | null>(null);
   const [iframeLoading, setIframeLoading] = useState(true);
   const [useFallback, setUseFallback] = useState(true);
-  const [pdfViewerError, setPdfViewerError] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -28,13 +28,12 @@ export default function FlipBook() {
     const fetchJornal = async () => {
       try {
         setLoading(true);
-        // Admin usa adminAPI, usuário comum usa userAPI
-        const jornalData = isAdmin 
+        const jornalData = isAdmin
           ? await adminAPI.getJornal(parseInt(id))
           : await userAPI.getJornal(parseInt(id));
         setJornal(jornalData);
-      } catch (error: any) {
-        console.error('Erro ao carregar jornal:', error);
+      } catch (err: unknown) {
+        console.error('Erro ao carregar jornal:', err);
         setError('Erro ao carregar o jornal. Verifique se você tem acesso.');
       } finally {
         setLoading(false);
@@ -51,26 +50,17 @@ export default function FlipBook() {
     }
   };
 
-  const handleIframeLoad = () => {
-    setIframeLoading(false);
-  };
-
-  const handleIframeError = () => {
-    setIframeLoading(false);
-    setError('Erro ao carregar o visualizador. Tente fazer download do PDF.');
-  };
-
-  const handlePdfViewerError = () => {
-    setPdfViewerError(true);
-    setUseFallback(true); // Auto switch to fallback
+  const toggleViewer = () => {
+    setUseFallback((prev) => !prev);
+    setIframeLoading(true);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-bg flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando jornal...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto mb-3" style={{ borderColor: BRAND }} />
+          <p className="text-gray-500 text-sm">A carregar jornal...</p>
         </div>
       </div>
     );
@@ -78,113 +68,129 @@ export default function FlipBook() {
 
   if (error || !jornal) {
     return (
-      <div className="min-h-screen bg-gradient-bg flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-destructive mb-2">Erro ao carregar jornal</h2>
-            <p className="text-muted-foreground mb-4">{error || 'Jornal não encontrado'}</p>
-            <Button 
-              onClick={() => navigate('/')}
-              variant="outline"
-              className="w-full"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar ao início
-            </Button>
-          </div>
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Erro ao carregar jornal</h2>
+          <p className="text-gray-500 text-sm mb-4">{error || 'Jornal não encontrado'}</p>
+          <Button onClick={() => navigate('/jornais')} variant="outline" className="w-full">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar aos jornais
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-bg">
-      {/* Header */}
-      <div className="bg-card/95 backdrop-blur-xl border-b border-primary/20 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={() => navigate('/')}
-                variant="outline"
-                size="sm"
-                className="bg-background/50"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar
-              </Button>
-              <div>
-                <h1 className="text-lg font-semibold bg-gradient-primary bg-clip-text text-transparent">
-                  {jornal.titulo}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(jornal.data_publicacao).toLocaleDateString('pt-BR')}
-                </p>
-              </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
+        {/* Mobile toolbar */}
+        <div className="lg:hidden">
+          <div className="flex items-center justify-between px-3 h-14">
+            <button
+              type="button"
+              onClick={() => navigate('/jornais')}
+              className="p-2 -ml-1 text-gray-800"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="flex-1 min-w-0 px-2 text-center">
+              <h1 className="text-sm font-semibold text-gray-900 truncate">{jornal.titulo}</h1>
+              <p className="text-[11px] text-gray-400">
+                {new Date(jornal.data_publicacao).toLocaleDateString('pt-PT')}
+              </p>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => {
-                  setUseFallback(!useFallback);
-                  setPdfViewerError(false);
-                }}
-                variant="outline"
-                size="sm"
-                className="bg-background/50"
+            <div className="flex items-center gap-0.5 shrink-0">
+              <button
+                type="button"
+                onClick={toggleViewer}
+                className="p-2 text-gray-700"
+                aria-label={useFallback ? 'Modo Google Viewer' : 'Modo directo'}
               >
-                {useFallback ? 'Google Viewer' : 'Download Direto'}
-              </Button>
-              <Button
+                {useFallback ? <Monitor className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+              </button>
+              <button
+                type="button"
                 onClick={handleDownload}
-                variant="outline"
-                size="sm"
-                className="bg-background/50"
+                className="p-2 text-gray-700"
+                aria-label="Download PDF"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
+                <Download className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Flipbook Container */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="bg-card/50 backdrop-blur-xl rounded-lg border border-primary/20 overflow-hidden">
-          <div className="h-[calc(100vh-200px)] min-h-[600px] relative">
+        {/* Desktop toolbar */}
+        <div className="hidden lg:block">
+          <div className="mx-auto max-w-7xl px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <Button
+                  onClick={() => navigate('/jornais')}
+                  variant="outline"
+                  size="sm"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Voltar
+                </Button>
+                <div className="min-w-0">
+                  <h1 className="text-lg font-semibold text-gray-900 truncate">{jornal.titulo}</h1>
+                  <p className="text-sm text-gray-400">
+                    {new Date(jornal.data_publicacao).toLocaleDateString('pt-PT')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Button onClick={toggleViewer} variant="outline" size="sm">
+                  {useFallback ? 'Google Viewer' : 'Download Directo'}
+                </Button>
+                <Button onClick={handleDownload} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex-1 px-2 sm:px-4 py-2 sm:py-4">
+        <div className="mx-auto max-w-7xl h-full bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
+          <div className="h-[calc(100dvh-3.5rem)] lg:h-[calc(100vh-5.5rem)] relative">
             {useFallback ? (
-              <div className="w-full h-full">
-                <iframe
-                  src={buildFileUrl(jornal.arquivopdf)}
-                  className="w-full h-full border-0"
-                  title={jornal.titulo}
-                  allowFullScreen
-                  onLoad={handleIframeLoad}
-                  onError={handleIframeError}
-                />
-              </div>
+              <iframe
+                src={buildFileUrl(jornal.arquivopdf)}
+                className="w-full h-full border-0"
+                title={jornal.titulo}
+                allowFullScreen
+                onLoad={() => setIframeLoading(false)}
+                onError={() => {
+                  setIframeLoading(false);
+                  setError('Erro ao carregar o visualizador. Tente fazer download do PDF.');
+                }}
+              />
             ) : (
-              <div className="w-full h-full">
-                <iframe
-                  src={`https://docs.google.com/gview?url=${encodeURIComponent(buildFileUrl(jornal.arquivopdf) || '')}&embedded=true`}
-                  className="w-full h-full border-0"
-                  title={jornal.titulo}
-                  allowFullScreen
-                  onLoad={handleIframeLoad}
-                  onError={handleIframeError}
-                />
-              </div>
+              <iframe
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(buildFileUrl(jornal.arquivopdf) || '')}&embedded=true`}
+                className="w-full h-full border-0"
+                title={jornal.titulo}
+                allowFullScreen
+                onLoad={() => setIframeLoading(false)}
+                onError={() => {
+                  setIframeLoading(false);
+                  setError('Erro ao carregar o visualizador. Tente fazer download do PDF.');
+                }}
+              />
             )}
             {iframeLoading && (
-              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">
-                    {useFallback ? 'Carregando PDF...' : 'Carregando visualizador...'}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Se o PDF não carregar, tente alternar o modo de visualização ou use o botão Download PDF
+              <div className="absolute inset-0 bg-white/90 flex items-center justify-center">
+                <div className="text-center px-4">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto mb-3" style={{ borderColor: BRAND }} />
+                  <p className="text-gray-500 text-sm">
+                    {useFallback ? 'A carregar PDF...' : 'A carregar visualizador...'}
                   </p>
                 </div>
               </div>

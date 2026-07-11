@@ -6,7 +6,7 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { AppHeader } from "@/components/AppHeader";
+import { AppHeader, HeaderSearchBar } from "@/components/AppHeader";
 import { CategoryChips } from "@/components/news/CategoryChips";
 import { CategorySidebar } from "@/components/news/CategorySidebar";
 import { newsAPI, formatNewsDate, getCategoryColor } from "@/services/news";
@@ -115,8 +115,7 @@ const Noticias = () => {
         currentUser={user}
         onLogout={logout}
         subtitle="Notícias e Jornais"
-        searchPlaceholder="Pesquisar notícias..."
-        categorySlot={categoryFilter}
+        searchPlaceholder="Pesquisar notícias, temas ou lugares..."
       />
 
       <div className="mx-auto max-w-7xl flex">
@@ -126,7 +125,15 @@ const Noticias = () => {
           onSelect={setSelectedCategory}
         />
 
-        <main className="flex-1 min-w-0 px-4 py-5 lg:px-6 lg:py-6">
+        <main className="flex-1 min-w-0 px-4 py-4 lg:px-6 lg:py-6">
+          <div className="lg:hidden space-y-2.5 mb-4">
+            <HeaderSearchBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchPlaceholder="Pesquisar notícias, temas ou lugares..."
+            />
+            {categoryFilter}
+          </div>
           {loading && (isHomeView ? <NewsListSkeleton /> : <CategoryFilterSkeleton />)}
 
           {!loading && posts.length === 0 && (

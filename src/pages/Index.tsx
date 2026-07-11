@@ -1,158 +1,30 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { User, LogIn, Calendar, X, Crown, Search } from "lucide-react";
+import { Calendar, Crown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { AppHeader, HeaderSearchBar } from "@/components/AppHeader";
-import { authAPI, userAPI, buildFileUrl } from "@/services/api";
+import { userAPI, buildFileUrl } from "@/services/api";
 import { useSubscriptionRenewal } from "@/hooks/useSubscriptionRenewal";
 import { formatSubscriptionType, useUserAccount } from "@/hooks/useUserAccount";
-import type { User as IUser, Jornal } from "@/types/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAuthModal } from "@/contexts/AuthModalContext";
+import type { Jornal } from "@/types/api";
 import { JornaisGridSkeleton } from "@/components/news/NewsSkeletons";
 
 const Index = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const { user, refreshUser } = useAuth();
+  const { openLogin } = useAuthModal();
+
   useSubscriptionRenewal();
-  const [showAuthModal, setShowAuthModal] = useState<"login" | "signup" | null>(null);
   const [jornais, setJornais] = useState<Jornal[]>([]);
   const [loadingList, setLoadingList] = useState(true);
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [confirmSenha, setConfirmSenha] = useState("");
-  const [nome, setNome] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<IUser | null>(null);
-  const { activeSubscription, hasActivePlan, loading: accountLoading } =
-    useUserAccount(Boolean(currentUser) && currentUser?.tipo_usuario !== "admin");
-
-  const resetAuthState = () => {
-    setEmail("");
-    setSenha("");
-    setConfirmSenha("");
-    setNome("");
-    setTelefone("");
-    setError(null);
-    setLoading(false);
-  };
-
-  const handleLogin = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await authAPI.login({ email, senha });
-      localStorage.setItem("token", res.access_token);
-      try {
-        const me = await authAPI.getCurrentUser();
-        localStorage.setItem("user", JSON.stringify(me));
-        setCurrentUser(me);
-      } catch (_) {}
-      setShowAuthModal(null);
-      resetAuthState();
-      // Recarrega a página para re-montar com o novo contexto/auth
-      window.location.reload();
-    } catch (e: any) {
-      setError(e?.response?.data?.detail || "Falha ao entrar. Verifique suas credenciais.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignup = async () => {
-    if (senha !== confirmSenha) {
-      setError("As senhas não coincidem.");
-      return;
-    }
-    try {
-      setLoading(true);
-      setError(null);
-      // Register as normal user (non-admin) via /user/register
-      await authAPI.register({ nome, telefone, email, senha });
-      // Auto login após registrar
-      const res = await authAPI.login({ email, senha });
-      localStorage.setItem("token", res.access_token);
-      try {
-        const me = await authAPI.getCurrentUser();
-        localStorage.setItem("user", JSON.stringify(me));
-        setCurrentUser(me);
-      } catch (_) {}
-      setShowAuthModal(null);
-      resetAuthState();
-      // Recarrega a página para re-montar com o novo contexto/auth
-      window.location.reload();
-    } catch (e: any) {
-      setError(e?.response?.data?.detail || "Falha ao cadastrar. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      setLoading(true);
-      await authAPI.logout().catch(() => {});
-    } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setCurrentUser(null);
-      setLoading(false);
-      // Recarrega a página para limpar qualquer estado dependente do contexto
-      window.location.reload();
-    }
-  };
-
-  // Function to refresh user data from backend
-  const refreshUserData = async () => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const userData = await authAPI.getCurrentUser();
-        localStorage.setItem("user", JSON.stringify(userData));
-        setCurrentUser(userData);
-        return userData;
-      } catch (error) {
-        console.error("Failed to refresh user data:", error);
-        return null;
-      }
-    }
-    return null;
-  };
-
-  // Function to check if user has active subscription
-  const checkActiveSubscription = async () => {
-    if (!currentUser) return false;
-    
-    // Check tipo_subscricao first (fast check)
-    if (currentUser.tipo_subscricao) {
-      return true;
-    }
-    
-    // If no tipo_subscricao, check active subscriptions from backend
-    try {
-      const subscriptions = await userAPI.getMySubscriptions();
-      const now = new Date();
-      const hasActiveSubscription = subscriptions.some(sub => {
-        const endDate = new Date(sub.end_date);
-        return sub.is_active && endDate > now;
-      });
-      
-      // If we found an active subscription but user doesn't have tipo_subscricao, refresh user data
-      if (hasActiveSubscription) {
-        await refreshUserData();
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error("Failed to check subscriptions:", error);
-      return false;
-    }
-  };
+  const { activeSubscription, hasActivePlan } = useUserAccount(
+    Boolean(user) && user?.tipo_usuario !== "admin"
+  );
 
   useEffect(() => {
     if (searchParams.get("planos") === "1") {
@@ -161,37 +33,14 @@ const Index = () => {
   }, [searchParams, navigate]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const cached = localStorage.getItem("user");
-    if (cached) {
-      try {
-        setCurrentUser(JSON.parse(cached));
-      } catch (_) {}
-    }
-    if (token && !cached) {
-      authAPI
-        .getCurrentUser()
-        .then((me) => {
-          localStorage.setItem("user", JSON.stringify(me));
-          setCurrentUser(me);
-        })
-        .catch(() => {});
-    }
-  }, []);
-
-  // Refresh user data periodically to catch subscription updates
-  useEffect(() => {
-    if (currentUser && currentUser.tipo_usuario !== 'admin') {
-      // Refresh user data every 30 seconds to catch subscription updates
+    if (user && user.tipo_usuario !== "admin") {
       const interval = setInterval(() => {
-        refreshUserData();
+        void refreshUser();
       }, 30000);
-      
       return () => clearInterval(interval);
     }
-  }, [currentUser]);
+  }, [user, refreshUser]);
 
-  // Carregar jornais reais
   const carregar = async () => {
     setLoadingList(true);
     try {
@@ -200,56 +49,77 @@ const Index = () => {
         limit: 100,
       });
       setJornais(data);
-    } catch (e) {
-      // opcional: exibir toast/erro
+    } catch {
+      // ignore
     } finally {
       setLoadingList(false);
     }
   };
 
   useEffect(() => {
-    carregar();
+    void carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const t = setTimeout(() => {
-      carregar();
+      void carregar();
     }, 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
+  const checkActiveSubscription = async () => {
+    if (!user) return false;
+
+    if (user.tipo_subscricao) return true;
+
+    try {
+      const subscriptions = await userAPI.getMySubscriptions();
+      const now = new Date();
+      const hasActiveSubscription = subscriptions.some((sub) => {
+        const endDate = new Date(sub.end_date);
+        return sub.is_active && endDate > now;
+      });
+
+      if (hasActiveSubscription) {
+        await refreshUser();
+        return true;
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
   const onClickJornal = async (j: Jornal) => {
-    if (!currentUser) {
-      setShowAuthModal("login");
+    if (!user) {
+      openLogin();
       return;
     }
-    
-    // Admins têm acesso ilimitado
-    if (currentUser.tipo_usuario === 'admin') {
+
+    if (user.tipo_usuario === "admin") {
       navigate(`/jornal/${j.id}`);
       return;
     }
-    
-    // Check if user has active subscription
+
     const hasActiveSubscription = await checkActiveSubscription();
-    
     if (hasActiveSubscription) {
       navigate(`/jornal/${j.id}`);
       return;
     }
 
-    // Verifica se comprou esta edição individualmente
     try {
       const purchases = await userAPI.getMyPurchases();
       if (purchases.some((p) => p.jornal_id === j.id)) {
         navigate(`/jornal/${j.id}`);
         return;
       }
-    } catch (_) {}
+    } catch {
+      // ignore
+    }
 
-    // Sem acesso: vai para planos com esta edição pré-seleccionada
     navigate(`/plans?jornal=${j.id}`);
   };
 
@@ -258,22 +128,6 @@ const Index = () => {
       <AppHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        currentUser={currentUser}
-        hasActivePlan={hasActivePlan}
-        activePlanLabel={
-          activeSubscription
-            ? formatSubscriptionType(activeSubscription.subscription_type)
-            : currentUser?.tipo_subscricao
-              ? formatSubscriptionType(currentUser.tipo_subscricao)
-              : null
-        }
-        loading={accountLoading}
-        onLogin={() => setShowAuthModal("login")}
-        onSignup={() => setShowAuthModal("signup")}
-        onLogout={handleLogout}
-        onSubscribe={() => navigate("/plans")}
-        logoutLoading={loading}
-        subtitle="Notícias e Jornais"
         searchPlaceholder="Buscar jornais..."
       />
 
@@ -286,7 +140,7 @@ const Index = () => {
           />
         </div>
 
-        {currentUser && currentUser.tipo_usuario !== "admin" && (
+        {user && user.tipo_usuario !== "admin" && (
           <div className="mb-6">
             {hasActivePlan && activeSubscription ? (
               <Card className="p-4 border-emerald-200 bg-emerald-50">
@@ -350,7 +204,7 @@ const Index = () => {
                   <div className="relative h-36 sm:h-52 overflow-hidden">
                     {jornal.capa ? (
                       <img
-                        src={buildFileUrl(jornal.capa) || ''}
+                        src={buildFileUrl(jornal.capa) || ""}
                         alt={jornal.titulo}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -377,7 +231,7 @@ const Index = () => {
                       style={{ backgroundColor: "#2B58C5" }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onClickJornal(jornal);
+                        void onClickJornal(jornal);
                       }}
                     >
                       Ler agora
@@ -393,138 +247,10 @@ const Index = () => {
               <Search className="w-8 h-8 text-gray-300" />
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-1">Nenhum jornal encontrado</h3>
-            <p className="text-sm text-gray-400">
-              Tente ajustar sua busca
-            </p>
+            <p className="text-sm text-gray-400">Tente ajustar a sua busca</p>
           </div>
         )}
       </main>
-
-      {/* Auth Modal Overlay */}
-      {showAuthModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-100 shadow-xl">
-            {/* Close Button */}
-            <button
-              onClick={() => setShowAuthModal(null)}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted/50 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="p-8">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ backgroundColor: "#2B58C5" }}>
-                  {showAuthModal === "login" ? (
-                    <LogIn className="w-8 h-8 text-white" />
-                  ) : (
-                    <User className="w-8 h-8 text-white" />
-                  )}
-                </div>
-                <h2 className="text-2xl font-bold mb-2 text-gray-900">
-                  {showAuthModal === "login" ? "Entrar" : "Criar Conta"}
-                </h2>
-                <p className="text-sm text-gray-400">
-                  {showAuthModal === "login"
-                    ? "Entre para acessar suas compras"
-                    : "Cadastre-se para começar a comprar"}
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Email</label>
-                  <Input
-                    type="email"
-                    placeholder="seu@email.com"
-                    className="bg-[#F0F2F6] border-0 text-gray-800"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Senha</label>
-                  <Input
-                    type="password"
-                    placeholder="••••••••"
-                    className="bg-[#F0F2F6] border-0 text-gray-800"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                  />
-                </div>
-                {showAuthModal === "signup" && (
-                  <>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Nome</label>
-                      <Input
-                        type="text"
-                        placeholder="Seu nome"
-                        className="bg-[#F0F2F6] border-0 text-gray-800"
-                        value={nome}
-                        onChange={(e) => setNome(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Telefone</label>
-                      <Input
-                        type="tel"
-                        placeholder="(00) 00000-0000"
-                        className="bg-[#F0F2F6] border-0 text-gray-800"
-                        value={telefone}
-                        onChange={(e) => setTelefone(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Confirmar Senha</label>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        className="bg-[#F0F2F6] border-0 text-gray-800"
-                        value={confirmSenha}
-                        onChange={(e) => setConfirmSenha(e.target.value)}
-                      />
-                    </div>
-                  </>
-                )}
-                {error && (
-                  <p className="text-sm text-red-500">{error}</p>
-                )}
-                <Button
-                  className="w-full text-white hover:opacity-90"
-                  style={{ backgroundColor: "#2B58C5" }}
-                  onClick={showAuthModal === "login" ? handleLogin : handleSignup}
-                  disabled={loading}
-                >
-                  {loading ? "Processando..." : showAuthModal === "login" ? "Entrar" : "Cadastrar"}
-                </Button>
-                <p className="text-center text-sm text-muted-foreground">
-                  {showAuthModal === "login" ? (
-                    <>
-                      Não tem conta?{" "}
-                      <button
-                        onClick={() => setShowAuthModal("signup")}
-                        className="text-primary hover:underline font-medium"
-                      >
-                        Cadastre-se
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      Já tem conta?{" "}
-                      <button
-                        onClick={() => setShowAuthModal("login")}
-                        className="text-primary hover:underline font-medium"
-                      >
-                        Entre aqui
-                      </button>
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -4,12 +4,7 @@ import { Heart } from "lucide-react";
 const Favoritos = () => {
   return (
     <div className="min-h-screen bg-white">
-      <AppHeader
-        searchQuery=""
-        onSearchChange={() => {}}
-        showSearch={false}
-        subtitle="As suas notícias guardadas"
-      />
+      <AppHeader showSearch={false} subtitle="As suas notícias guardadas" />
 
       <div className="mx-auto max-w-7xl px-4 py-8 lg:px-6">
         <div className="flex flex-col items-center justify-center py-24 text-center">

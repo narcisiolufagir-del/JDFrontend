@@ -6,7 +6,6 @@ import { PlansCheckout } from "@/components/plans/PlansCheckout";
 import { isPurchasePlan } from "@/constants/plans";
 import { usePlansPayment } from "@/hooks/usePlansPayment";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserAccount, formatSubscriptionType } from "@/hooks/useUserAccount";
 import { userAPI } from "@/services/api";
 import { toast } from "@/hooks/use-toast";
 import type { Jornal } from "@/types/api";
@@ -17,8 +16,7 @@ const Plans = () => {
   const jornalId = searchParams.get("jornal");
   const [selectedJornal, setSelectedJornal] = useState<Jornal | null>(null);
 
-  const { user, logout } = useAuth();
-  const { hasActivePlan, activeSubscription, loading: accountLoading } = useUserAccount(Boolean(user));
+  const { user } = useAuth();
 
   const {
     plans,
@@ -83,22 +81,7 @@ const Plans = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <AppHeader
-        searchQuery=""
-        onSearchChange={() => {}}
-        showSearch={false}
-        currentUser={user || currentUser}
-        hasActivePlan={hasActivePlan}
-        activePlanLabel={
-          activeSubscription
-            ? formatSubscriptionType(activeSubscription.subscription_type)
-            : null
-        }
-        loading={accountLoading}
-        onLogout={logout}
-        onSubscribe={() => {}}
-        subtitle="Planos e Subscrições"
-      />
+      <AppHeader showSearch={false} subtitle="Planos e Subscrições" />
 
       <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6 lg:py-8">
         <button

@@ -14,6 +14,7 @@ import FlipBook from "./pages/flipbook";
 import Profile from "./pages/Profile";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { AuthProvider } from "./contexts/AuthContext";
+import { AuthModalProvider } from "./contexts/AuthModalContext";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import JornaisManagement from "./pages/admin/JornaisManagement";
@@ -35,6 +36,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+        <AuthModalProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -63,6 +65,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </AuthModalProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

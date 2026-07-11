@@ -23,13 +23,11 @@ import {
   NewsVerticalList,
   getCategoryLayout,
 } from "@/components/news/NewsCards";
-import { useAuth } from "@/contexts/AuthContext";
 
 const BRAND = "#2B58C5";
 
 const Noticias = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
@@ -112,9 +110,6 @@ const Noticias = () => {
       <AppHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        currentUser={user}
-        onLogout={logout}
-        subtitle="Notícias e Jornais"
         searchPlaceholder="Pesquisar notícias, temas ou lugares..."
       />
 

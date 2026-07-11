@@ -1,5 +1,4 @@
 import {
-  Menu,
   Search,
   User,
   LogIn,
@@ -22,10 +21,11 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import type { User as IUser } from "@/types/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAuthModal } from "@/contexts/AuthModalContext";
+import { formatSubscriptionType, useUserAccount } from "@/hooks/useUserAccount";
 
 const BRAND = "#2B58C5";
 const CHIP_BG = "#F0F2F6";
@@ -59,17 +59,8 @@ export function HeaderSearchBar({
 }
 
 type AppHeaderProps = {
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
-  currentUser?: IUser | null;
-  hasActivePlan?: boolean;
-  activePlanLabel?: string | null;
-  loading?: boolean;
-  onLogin?: () => void;
-  onSignup?: () => void;
-  onLogout?: () => void;
-  onSubscribe?: () => void;
-  logoutLoading?: boolean;
+  searchQuery?: string;
+  onSearchChange?: (value: string) => void;
   subtitle?: string;
   searchPlaceholder?: string;
   showSearch?: boolean;
@@ -82,83 +73,50 @@ const desktopNav = [
 ];
 
 export function AppHeader({
-  searchQuery,
-  onSearchChange,
-  currentUser = null,
-  hasActivePlan = false,
-  activePlanLabel,
-  onLogin,
-  onSignup,
-  onLogout,
-  onSubscribe,
-  logoutLoading,
+  searchQuery = "",
+  onSearchChange = () => {},
   subtitle = "Notícias e Jornais",
   searchPlaceholder = "Pesquisar...",
   showSearch = true,
 }: AppHeaderProps) {
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const { openLogin, openSignup } = useAuthModal();
+  const { hasActivePlan, activeSubscription } = useUserAccount(Boolean(user) && user?.tipo_usuario !== "admin");
+  const [accountOpen, setAccountOpen] = useState(false);
 
-  const closeAnd = (fn?: () => void) => () => {
-    setMenuOpen(false);
-    fn?.();
-  };
-
-  const handleLogin = () => {
-    if (onLogin) onLogin();
-    else navigate("/jornais");
-  };
-
-  const handleSignup = () => {
-    if (onSignup) onSignup();
-    else navigate("/jornais");
-  };
-
-  const handleSubscribe = () => {
-    if (onSubscribe) onSubscribe();
-    else navigate("/plans");
-  };
+  const activePlanLabel = activeSubscription
+    ? formatSubscriptionType(activeSubscription.subscription_type)
+    : user?.tipo_subscricao
+      ? formatSubscriptionType(user.tipo_subscricao)
+      : null;
 
   const planBadge = hasActivePlan ? (
-    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
+    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200 text-xs">
       <Crown className="w-3 h-3 mr-1" />
       Plano activo{activePlanLabel ? ` · ${activePlanLabel}` : ""}
     </Badge>
-  ) : currentUser && currentUser.tipo_usuario !== "admin" ? (
-    <Badge
-      variant="secondary"
-      className="cursor-pointer bg-gray-100 text-gray-600"
-      onClick={handleSubscribe}
-    >
+  ) : user && user.tipo_usuario !== "admin" ? (
+    <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs">
       Sem plano
     </Badge>
   ) : null;
 
-  const mobileNavLinks = (
-    <>
-      {desktopNav.map(({ to, label, icon: Icon, end }) => (
-        <Button
-          key={to}
-          variant="ghost"
-          className="w-full justify-start text-gray-700"
-          onClick={closeAnd(() => navigate(to))}
-        >
-          <Icon className="w-4 h-4 mr-2" />
-          {label}
-        </Button>
-      ))}
-    </>
-  );
+  const userInitial = (user?.nome || user?.email || "U").charAt(0).toUpperCase();
+
+  const closeAnd = (fn: () => void) => () => {
+    setAccountOpen(false);
+    fn();
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
       <div className="mx-auto max-w-7xl px-4">
-        {/* Barra principal: logo + search + menu */}
         <div className="flex items-center gap-2 sm:gap-3 h-14 lg:h-16">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="shrink-0 text-left"
+            className="shrink-0 text-left min-w-0"
           >
             <h1
               className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight leading-none"
@@ -166,12 +124,11 @@ export function AppHeader({
             >
               O DESTAQUE
             </h1>
-            <p className="hidden sm:block text-[11px] lg:text-xs text-gray-400 mt-0.5">
+            <p className="hidden sm:block text-[11px] lg:text-xs text-gray-400 mt-0.5 truncate">
               {subtitle}
             </p>
           </button>
 
-          {/* Nav desktop */}
           <nav className="hidden lg:flex items-center gap-0.5 ml-4">
             {desktopNav.map(({ to, label, end }) => (
               <NavLink
@@ -193,11 +150,10 @@ export function AppHeader({
             ))}
           </nav>
 
-          <div className="flex-1 min-w-0 lg:hidden" aria-hidden />
+          <div className="flex-1 min-w-0" aria-hidden />
 
-          {/* Search no header — apenas desktop */}
           {showSearch && (
-            <div className="hidden lg:block flex-1 min-w-0 max-w-md ml-auto">
+            <div className="hidden lg:block w-full max-w-md">
               <HeaderSearchBar
                 searchQuery={searchQuery}
                 onSearchChange={onSearchChange}
@@ -206,9 +162,9 @@ export function AppHeader({
             </div>
           )}
 
-          {/* Auth desktop */}
-          <div className="hidden lg:flex items-center gap-2 shrink-0">
-            {currentUser ? (
+          {/* Desktop auth */}
+          <div className="hidden lg:flex items-center gap-2 shrink-0 ml-3">
+            {user ? (
               <>
                 {planBadge}
                 <Button
@@ -218,57 +174,40 @@ export function AppHeader({
                   onClick={() => navigate("/profile")}
                 >
                   <User className="w-4 h-4 mr-1.5" />
-                  {currentUser.nome?.split(" ")[0] || "Perfil"}
+                  {user.nome?.split(" ")[0] || "Perfil"}
                 </Button>
-                {currentUser.tipo_usuario === "admin" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate("/admin")}
-                  >
+                {user.tipo_usuario === "admin" && (
+                  <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>
                     <Shield className="w-4 h-4" />
                   </Button>
                 )}
-                {currentUser.tipo_usuario !== "admin" && (
+                {user.tipo_usuario !== "admin" && (
                   <Button
                     variant="outline"
                     size="sm"
                     className="border-[#2B58C5]/30 text-[#2B58C5]"
-                    onClick={handleSubscribe}
+                    onClick={() => navigate("/plans")}
                   >
                     <CreditCard className="w-4 h-4 mr-1.5" />
                     {hasActivePlan ? "Planos" : "Subscrever"}
                   </Button>
                 )}
-                {onLogout && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:text-red-600"
-                    onClick={onLogout}
-                    disabled={logoutLoading}
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </Button>
-                )}
-              </>
-            ) : (
-              <>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-700"
-                  onClick={handleLogin}
+                  className="text-red-600 hover:text-red-600"
+                  onClick={() => logout()}
                 >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="text-gray-700" onClick={openLogin}>
                   <LogIn className="w-4 h-4 mr-1.5" />
                   Entrar
                 </Button>
-                <Button
-                  size="sm"
-                  className="text-white"
-                  style={{ backgroundColor: BRAND }}
-                  onClick={handleSignup}
-                >
+                <Button size="sm" className="text-white" style={{ backgroundColor: BRAND }} onClick={openSignup}>
                   <UserPlus className="w-4 h-4 mr-1.5" />
                   Criar conta
                 </Button>
@@ -276,102 +215,89 @@ export function AppHeader({
             )}
           </div>
 
-          {/* Menu mobile */}
-          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-            <SheetTrigger asChild>
+          {/* Mobile: conta compacta (sem duplicar bottom nav) */}
+          <div className="lg:hidden shrink-0">
+            {user ? (
               <button
                 type="button"
-                className="lg:hidden p-2 -mr-1 text-gray-800 shrink-0"
-                aria-label="Menu"
+                onClick={() => setAccountOpen(true)}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold text-white"
+                style={{ backgroundColor: BRAND }}
+                aria-label="Conta"
               >
-                <Menu className="w-6 h-6" strokeWidth={2} />
+                {userInitial}
               </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] bg-white">
-              <SheetHeader>
-                <SheetTitle className="text-gray-900">Menu</SheetTitle>
-              </SheetHeader>
-
-              <div className="mt-6 space-y-2">
-                {currentUser ? (
-                  <>
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 mb-4">
-                      <p className="text-sm font-medium truncate text-gray-900">
-                        {currentUser.nome || currentUser.email}
-                      </p>
-                      <p className="text-xs text-gray-400 truncate">{currentUser.email}</p>
-                      {planBadge && <div className="mt-2">{planBadge}</div>}
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-gray-700"
-                      onClick={closeAnd(() => navigate("/profile"))}
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      Meu perfil
-                    </Button>
-                    {mobileNavLinks}
-                    {currentUser.tipo_usuario !== "admin" && (
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-gray-700"
-                        onClick={closeAnd(handleSubscribe)}
-                      >
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        {hasActivePlan ? "Ver planos" : "Subscrever"}
-                      </Button>
-                    )}
-                    {currentUser.tipo_usuario === "admin" && (
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-gray-700"
-                        onClick={closeAnd(() => navigate("/admin"))}
-                      >
-                        <Shield className="w-4 h-4 mr-2" />
-                        Admin
-                      </Button>
-                    )}
-                    {onLogout && (
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-red-600 hover:text-red-600"
-                        onClick={closeAnd(onLogout)}
-                        disabled={logoutLoading}
-                      >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Sair
-                      </Button>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      className="w-full justify-center text-white h-11"
-                      style={{ backgroundColor: BRAND }}
-                      onClick={closeAnd(handleLogin)}
-                    >
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Entrar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-center h-11 border-[#2B58C5]/40 text-[#2B58C5]"
-                      onClick={closeAnd(handleSignup)}
-                    >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Criar conta
-                    </Button>
-                    <div className="pt-2 space-y-1 border-t border-gray-100 mt-2">
-                      {mobileNavLinks}
-                    </div>
-                  </>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
+            ) : (
+              <button
+                type="button"
+                onClick={openLogin}
+                className="text-sm font-medium px-2 py-1.5 rounded-lg"
+                style={{ color: BRAND }}
+              >
+                Entrar
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      <Sheet open={accountOpen} onOpenChange={setAccountOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-8 pt-2 lg:hidden">
+          <SheetHeader className="text-left pb-2">
+            <SheetTitle className="text-gray-900">Minha conta</SheetTitle>
+          </SheetHeader>
+
+          {user && (
+            <div className="space-y-1">
+              <div className="rounded-xl bg-gray-50 p-3 mb-3">
+                <p className="text-sm font-semibold text-gray-900 truncate">{user.nome || "Utilizador"}</p>
+                <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                {planBadge && <div className="mt-2">{planBadge}</div>}
+              </div>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-11 text-gray-700"
+                onClick={closeAnd(() => navigate("/profile"))}
+              >
+                <User className="w-4 h-4 mr-3" />
+                Ver perfil
+              </Button>
+
+              {user.tipo_usuario !== "admin" && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start h-11 text-gray-700"
+                  onClick={closeAnd(() => navigate("/plans"))}
+                >
+                  <CreditCard className="w-4 h-4 mr-3" />
+                  {hasActivePlan ? "Ver planos" : "Subscrever"}
+                </Button>
+              )}
+
+              {user.tipo_usuario === "admin" && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start h-11 text-gray-700"
+                  onClick={closeAnd(() => navigate("/admin"))}
+                >
+                  <Shield className="w-4 h-4 mr-3" />
+                  Administração
+                </Button>
+              )}
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-11 text-red-600 hover:text-red-600"
+                onClick={closeAnd(() => logout())}
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                Sair
+              </Button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }

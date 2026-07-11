@@ -8,6 +8,7 @@ interface AuthContextType {
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<User | null>;
   isLoading: boolean;
   isAdmin: boolean;
 }
@@ -69,6 +70,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const refreshUser = async () => {
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken) return null;
+    try {
+      const userData = await authAPI.getCurrentUser();
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      return userData;
+    } catch {
+      return null;
+    }
+  };
+
   const isAdmin = user?.tipo_usuario === 'admin';
 
   const value: AuthContextType = {
@@ -77,6 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    refreshUser,
     isLoading,
     isAdmin,
   };
